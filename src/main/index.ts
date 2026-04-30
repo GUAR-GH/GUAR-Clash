@@ -20,7 +20,6 @@ import { exePath, taskDir } from './utils/dirs'
 import { showFloatingWindow } from './resolve/floatingWindow'
 import { getAppConfigSync } from './config/app'
 import { t } from './utils/i18n'
-import { checkAutoRun, enableAutoRun } from './sys/autoRun'
 import { checkForAppUpdates } from './core/appUpdater'
 
 let quitTimeout: NodeJS.Timeout | null = null
@@ -42,18 +41,6 @@ function getWindowLayout(): typeof COMPACT_WINDOW {
   return {
     ...base,
     height: Math.min(base.height, Math.max(base.minHeight, workArea.height - 40))
-  }
-}
-
-async function ensureAutoRunEnabled(): Promise<void> {
-  if (is.dev) return
-
-  try {
-    if (!(await checkAutoRun())) {
-      await enableAutoRun()
-    }
-  } catch {
-    // Autostart is best-effort: startup should continue even if OS registration fails.
   }
 }
 
@@ -366,7 +353,6 @@ app.whenReady().then(async () => {
   const appConfig = await getAppConfig()
   const { showFloatingWindow: showFloating = false, disableTray = false } = appConfig
   registerIpcMainHandlers()
-  void ensureAutoRunEnabled()
 
   // Check process.argv for deep link URL (cold start on Windows/Linux)
   if (!pendingDeepLink) {

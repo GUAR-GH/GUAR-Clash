@@ -20,6 +20,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -28,36 +29,6 @@ jobs:
           - os: windows-latest
             arch: x64
             format: nsis
-          - os: windows-latest
-            arch: arm64
-            format: 7z
-          - os: windows-latest
-            arch: arm64
-            format: nsis
-
-          - os: ubuntu-latest
-            arch: x64
-            format: deb
-          - os: ubuntu-latest
-            arch: x64
-            format: rpm
-          - os: ubuntu-latest
-            arch: x64
-            format: pacman
-          - os: ubuntu-latest
-            arch: arm64
-            format: deb
-          - os: ubuntu-latest
-            arch: arm64
-            format: rpm
-          - os: ubuntu-latest
-            arch: arm64
-            format: pacman
-
-          - os: macos-latest
-            arch: x64
-          - os: macos-latest
-            arch: arm64
 
     name: Build ${{ matrix.os }}-${{ matrix.arch }}${{ matrix.format && '-' || '' }}${{ matrix.format || '' }}
 
@@ -90,16 +61,6 @@ jobs:
 
           jq --arg version "$RELEASE_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Correct folder name on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sed -i "s/productName: GUAR Clash/productName: GUAR.Clash/" electron-builder.yml
-
-      - name: Install Build Tools
-        if: matrix.os == 'ubuntu-latest' && matrix.format == 'pacman'
-        run: |
-          sudo apt-get update && sudo apt-get install -y libarchive-tools fakeroot
-
       - name: Install Dependencies and Prepare
         env:
           npm_config_arch: ${{ matrix.arch }}
@@ -109,31 +70,13 @@ jobs:
           SKIP_PREPARE=1 pnpm install
           pnpm prepare --${{ matrix.arch }}
 
-      - name: Create Apple API Key file
-        if: matrix.os == 'macos-latest'
-        run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APPLE_API_KEY_CONTENT }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
-
       - name: Build
         env:
           npm_config_arch: ${{ matrix.arch }}
           npm_config_target_arch: ${{ matrix.arch }}
-          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE || '' }}
-          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          CSC_NAME: ${{ matrix.os == 'macos-latest' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_API_KEY_ID: ${{ matrix.os == 'macos-latest' && secrets.APPLE_API_KEY || '' }}
-          APPLE_API_ISSUER: ${{ matrix.os == 'macos-latest' && secrets.APPLE_API_ISSUER || '' }}
-          APPLE_API_KEY: ${{ matrix.os == 'macos-latest' && format('~/.appstoreconnect/private_keys/AuthKey_{0}.p8', secrets.APPLE_API_KEY) || '' }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
         shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            pnpm build:win ${{ matrix.format }} --${{ matrix.arch }}
-          elif [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            pnpm build:linux ${{ matrix.format }} --${{ matrix.arch }}
-          else
-            pnpm build:mac --${{ matrix.arch }}
-          fi
+        run: pnpm build:win ${{ matrix.format }} --${{ matrix.arch }}
 
       - name: Add Portable Flag
         if: matrix.os == 'windows-latest' && matrix.format == '7z'
@@ -161,7 +104,7 @@ jobs:
 
   pre-release:
     needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -200,7 +143,7 @@ jobs:
   release:
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != '')
     needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -226,6 +169,7 @@ jobs:
           echo "version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Update Version
+        shell: bash
         run: |
           CLEAN_VERSION="${{ steps.release_version.outputs.version }}"
           jq --arg version "$CLEAN_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
@@ -241,6 +185,7 @@ jobs:
           fi
 
       - name: Install Dependencies and Updater
+        shell: bash
         run: |
           npm install -g pnpm
           SKIP_PREPARE=1 pnpm install
@@ -270,6 +215,7 @@ jobs:
 
       - name: Telegram Alert
         if: success()
+        shell: bash
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GROUP_ID: ${{ secrets.TELEGRAM_TO_GROUP }}

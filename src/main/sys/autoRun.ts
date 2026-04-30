@@ -1,66 +1,36 @@
-import { exePath, homeDir, resourcesFilesDir, taskDir } from '../utils/dirs'
-import { execWithElevation } from '../utils/elevation'
-import { copyFile, mkdir, readFile, rm, writeFile } from 'fs/promises'
+import { exePath, homeDir } from '../utils/dirs'
+import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { execFile } from 'child_process'
 import { existsSync } from 'fs'
 import { promisify } from 'util'
 import path from 'path'
 
 const appName = 'guar-clash'
-const taskRunner = 'guar-clash-run.exe'
-const sourceTaskRunner = 'koala-clash-run.exe'
+const windowsStartupShortcutName = 'GUAR Clash.lnk'
+const windowsStartupApprovedShortcutKey =
+  'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\StartupFolder'
+const windowsStartupApprovedRunKey =
+  'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\Run'
+const windowsRunKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
+const windowsRunValueName = 'GUAR Clash'
 
-const taskXml = `<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <Triggers>
-    <LogonTrigger>
-      <Enabled>true</Enabled>
-      <Delay>PT3S</Delay>
-    </LogonTrigger>
-  </Triggers>
-  <Principals>
-    <Principal id="Author">
-      <LogonType>InteractiveToken</LogonType>
-      <RunLevel>HighestAvailable</RunLevel>
-    </Principal>
-  </Principals>
-  <Settings>
-    <MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
-    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
-    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
-    <AllowHardTerminate>false</AllowHardTerminate>
-    <StartWhenAvailable>false</StartWhenAvailable>
-    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
-    <IdleSettings>
-      <StopOnIdleEnd>false</StopOnIdleEnd>
-      <RestartOnIdle>false</RestartOnIdle>
-    </IdleSettings>
-    <AllowStartOnDemand>true</AllowStartOnDemand>
-    <Enabled>true</Enabled>
-    <Hidden>false</Hidden>
-    <RunOnlyIfIdle>false</RunOnlyIfIdle>
-    <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
-    <Priority>3</Priority>
-  </Settings>
-  <Actions Context="Author">
-    <Exec>
-      <Command>"${path.join(taskDir(), taskRunner)}"</Command>
-      <Arguments>"${exePath()}"</Arguments>
-    </Exec>
-  </Actions>
-</Task>
-`
+function windowsStartupShortcutPath(): string {
+  return path.join(
+    homeDir,
+    'AppData',
+    'Roaming',
+    'Microsoft',
+    'Windows',
+    'Start Menu',
+    'Programs',
+    'Startup',
+    windowsStartupShortcutName
+  )
+}
 
 export async function checkAutoRun(): Promise<boolean> {
   if (process.platform === 'win32') {
-    const execFilePromise = promisify(execFile)
-    try {
-      const { stdout } = await execFilePromise('schtasks.exe', ['/query', '/tn', `${appName}`])
-      return stdout.includes(appName)
-    } catch (e) {
-      return false
-    }
+    return existsSync(windowsStartupShortcutPath())
   }
 
   if (process.platform === 'darwin') {
@@ -80,20 +50,51 @@ export async function checkAutoRun(): Promise<boolean> {
 
 export async function enableAutoRun(): Promise<void> {
   if (process.platform === 'win32') {
-    const taskFilePath = path.join(taskDir(), `${appName}.xml`)
-    await copyFile(
-      path.join(resourcesFilesDir(), sourceTaskRunner),
-      path.join(taskDir(), taskRunner)
-    )
-    await writeFile(taskFilePath, Buffer.from(`\ufeff${taskXml}`, 'utf-16le'))
-    await execWithElevation('schtasks.exe', [
-      '/create',
-      '/tn',
-      `${appName}`,
-      '/xml',
-      `${taskFilePath}`,
+    const execFilePromise = promisify(execFile)
+    const startupShortcutPath = windowsStartupShortcutPath()
+    const shortcutScript = [
+      `$shortcutPath = '${startupShortcutPath.replace(/'/g, "''")}'`,
+      `$targetPath = '${exePath().replace(/'/g, "''")}'`,
+      `$shell = New-Object -ComObject WScript.Shell`,
+      `$shortcut = $shell.CreateShortcut($shortcutPath)`,
+      `$shortcut.TargetPath = $targetPath`,
+      `$shortcut.WorkingDirectory = Split-Path -Parent $targetPath`,
+      `$shortcut.IconLocation = "$targetPath,0"`,
+      `$shortcut.Save()`
+    ].join('; ')
+    await execFilePromise('reg.exe', [
+      'delete',
+      windowsRunKey,
+      '/v',
+      windowsRunValueName,
       '/f'
+    ]).catch(() => undefined)
+    await execFilePromise('reg.exe', [
+      'delete',
+      windowsStartupApprovedRunKey,
+      '/v',
+      windowsRunValueName,
+      '/f'
+    ]).catch(() => undefined)
+    await execFilePromise('reg.exe', [
+      'delete',
+      windowsStartupApprovedShortcutKey,
+      '/v',
+      windowsStartupShortcutName,
+      '/f'
+    ]).catch(() => undefined)
+    await execFilePromise('powershell.exe', [
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-Command',
+      shortcutScript
     ])
+    try {
+      await execFilePromise('schtasks.exe', ['/delete', '/tn', appName, '/f'])
+    } catch {
+      // ignore stale scheduler cleanup failures
+    }
   }
   if (process.platform === 'darwin') {
     const execFilePromise = promisify(execFile)
@@ -129,7 +130,46 @@ Categories=Utility;
 
 export async function disableAutoRun(): Promise<void> {
   if (process.platform === 'win32') {
-    await execWithElevation('schtasks.exe', ['/delete', '/tn', `${appName}`, '/f'])
+    const execFilePromise = promisify(execFile)
+    await rm(windowsStartupShortcutPath(), { force: true })
+    try {
+      await execFilePromise('reg.exe', [
+        'delete',
+        windowsRunKey,
+        '/v',
+        windowsRunValueName,
+        '/f'
+      ])
+    } catch {
+      // ignore missing registry values
+    }
+    try {
+      await execFilePromise('reg.exe', [
+        'delete',
+        windowsStartupApprovedShortcutKey,
+        '/v',
+        windowsStartupShortcutName,
+        '/f'
+      ])
+    } catch {
+      // ignore missing startup approval values
+    }
+    try {
+      await execFilePromise('reg.exe', [
+        'delete',
+        windowsStartupApprovedRunKey,
+        '/v',
+        windowsRunValueName,
+        '/f'
+      ])
+    } catch {
+      // ignore missing startup approval values
+    }
+    try {
+      await execFilePromise('schtasks.exe', ['/delete', '/tn', appName, '/f'])
+    } catch {
+      // ignore stale scheduler cleanup failures
+    }
   }
   if (process.platform === 'darwin') {
     const execFilePromise = promisify(execFile)

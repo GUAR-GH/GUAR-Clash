@@ -19,20 +19,18 @@ git pull origin main
 ## 2. Установить зависимости с нуля
 
 ```powershell
-corepack enable
-corepack prepare pnpm@10.33.0 --activate
 $env:SKIP_PREPARE='1'
-pnpm install
+npx --yes pnpm@10.33.0 install
 Remove-Item Env:\SKIP_PREPARE
-pnpm prepare --x64
+npx --yes pnpm@10.33.0 prepare --x64
 ```
 
-`pnpm prepare --x64` скачивает sidecar-файлы для Windows x64. Для arm64 используйте `pnpm prepare --arm64`.
+`prepare --x64` скачивает sidecar-файлы для Windows x64. Для arm64 используйте `prepare --arm64`.
 
 ## 3. Проверить проект
 
 ```powershell
-pnpm typecheck
+npx --yes pnpm@10.33.0 run typecheck
 ```
 
 Если типы прошли, можно собирать.
@@ -41,7 +39,7 @@ pnpm typecheck
 
 ```powershell
 $env:CSC_IDENTITY_AUTO_DISCOVERY='false'
-pnpm build:win --x64
+npx --yes pnpm@10.33.0 run build:win -- --x64
 ```
 
 Готовые файлы будут в `dist/`:
@@ -62,7 +60,7 @@ git push origin main
 
 Замените `1.2.1` на текущую версию.
 
-## 6. Выпустить релиз через GitHub Actions
+## 6. Вариант A: выпустить релиз через GitHub Actions
 
 1. Откройте GitHub -> `Actions` -> `Build`.
 2. Нажмите `Run workflow`.
@@ -71,7 +69,25 @@ git push origin main
 
 Workflow соберёт артефакты, создаст GitHub Release и загрузит файлы в релиз. Приложение при следующем запуске проверит `releases/latest`, увидит новую версию и предложит пользователю скачать обновление.
 
-## 7. Что важно для безопасных обновлений
+## 7. Вариант B: ручной релиз без GitHub Actions
+
+Если GitHub Actions заблокированы биллингом, можно выпустить релиз вручную:
+
+```powershell
+npx --yes pnpm@10.33.0 updater
+```
+
+После этого откройте GitHub -> `Releases` -> `Draft a new release`:
+
+- `Tag`: версия без `v`, например `1.2.1`
+- `Target`: `main`
+- `Title`: `1.2.1`
+- `Description`: содержимое `changelog.md`
+- `Assets`: загрузите `latest.yml`, `dist/GUAR Clash_x64-setup.exe`, `dist/GUAR Clash_x64-portable.7z`
+
+Опубликуйте релиз. Приложение увидит новую версию через GitHub Releases API и предложит пользователю скачать установщик.
+
+## 8. Что важно для безопасных обновлений
 
 - Не меняйте `appId` в `electron-builder.yml`, иначе Windows будет считать приложение другим продуктом.
 - Не меняйте `productName` без необходимости, иначе имена установщика и путь установки могут отличаться.

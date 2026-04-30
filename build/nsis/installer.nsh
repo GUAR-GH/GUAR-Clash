@@ -25,8 +25,15 @@
   ExecWait '"$SYSDIR\schtasks.exe" /Delete /TN "guar-clash-run" /F'
   ExecWait '"$SYSDIR\schtasks.exe" /Delete /TN "koala-clash-run" /F'
 
-  ; --- Copy migration file to new app data directory ---
+  ; Register default Windows autostart in a place visible in Task Manager.
   SetShellVarContext current
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "GUAR Clash"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "GUAR Clash"
+  Delete "$SMSTARTUP\GUAR Clash.lnk"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder" "GUAR Clash.lnk"
+  CreateShortCut "$SMSTARTUP\GUAR Clash.lnk" "$INSTDIR\GUAR Clash.exe" "" "$INSTDIR\GUAR Clash.exe" 0
+
+  ; --- Copy migration file to new app data directory ---
   IfFileExists "$TEMP\koala-clash-migration-profiles.yaml" 0 no_migration_file
     CreateDirectory "$APPDATA\GUAR Clash"
     CopyFiles /SILENT "$TEMP\koala-clash-migration-profiles.yaml" "$APPDATA\GUAR Clash\.migration-profiles.yaml"
@@ -37,6 +44,12 @@
 
 !macro customUnInstall
   ; Clean up elevated runner tasks so future installs cannot launch an old exe path.
+  SetShellVarContext current
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "GUAR Clash"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "GUAR Clash"
+  Delete "$SMSTARTUP\GUAR Clash.lnk"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder" "GUAR Clash.lnk"
+  SetShellVarContext all
   ExecWait '"$SYSDIR\schtasks.exe" /Delete /TN "guar-clash" /F'
   ExecWait '"$SYSDIR\schtasks.exe" /Delete /TN "guar-clash-run" /F'
   ExecWait '"$SYSDIR\schtasks.exe" /Delete /TN "koala-clash-run" /F'
