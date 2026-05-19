@@ -1,6 +1,6 @@
 {
   "name": "guar-clash",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "GUAR Clash",
   "main": "./out/main/index.js",
   "author": "GUAR-GH",

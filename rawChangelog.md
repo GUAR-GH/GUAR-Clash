@@ -1,3 +1,8 @@
+## 1.2.3
+
+- fixed release version metadata so the installed app reports 1.2.3
+- rebuilt Windows installer and portable package for the 1.2.3 release
+
 ## 1.2.0
 
 - reduced memory usage
