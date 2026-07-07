@@ -6,7 +6,7 @@ const chat_ids = [process.env.GROUP_ID, process.env.CHANNEL_ID]
 const pkg = readFileSync('package.json', 'utf-8')
 const rawChangelog = readFileSync('rawChangelog.md', 'utf-8')
 const { version } = JSON.parse(pkg)
-const releaseRepo = process.env.RELEASE_REPO || 'GUAR-GH/koala-clash-guar-styled'
+const releaseRepo = process.env.RELEASE_REPO || 'GUAR-GH/GUAR-Clash'
 const releaseTag = process.env.RELEASE_TAG || version
 const changelog = extractVersionSection(rawChangelog, version)
 let content = `<tg-emoji emoji-id='5258249368670073225'>❗️</tg-emoji>   <b><a href="https://github.com/${releaseRepo}/releases/tag/${releaseTag}">New Release</a></b>\n\n`

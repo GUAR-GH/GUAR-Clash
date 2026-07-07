@@ -4,8 +4,8 @@
   <img src="./build/icon.png" alt="GUAR" width="128" />
   <br>
   <br>
-  <a href="https://github.com/GUAR-GH/koala-clash-guar-styled/releases">
-    <img src="https://img.shields.io/github/release/GUAR-GH/koala-clash-guar-styled/all.svg" alt="Releases">
+  <a href="https://github.com/GUAR-GH/GUAR-Clash/releases">
+    <img src="https://img.shields.io/github/release/GUAR-GH/GUAR-Clash/all.svg" alt="Releases">
   </a>
 </p>
 
@@ -46,7 +46,7 @@
 
 ### Вариант 1. Установщик
 
-1. Скачайте `GUAR Clash_x64-setup.exe` со страницы [Releases](https://github.com/GUAR-GH/koala-clash-guar-styled/releases).
+1. Скачайте `GUAR Clash_x64-setup.exe` со страницы [Releases](https://github.com/GUAR-GH/GUAR-Clash/releases).
 2. Запустите установщик и завершите стандартную установку.
 3. После установки приложение появится в меню "Пуск" как `GUAR Clash`.
 
@@ -106,7 +106,7 @@ guar://install-config?url=https%3A%2F%2Fexample.com%2Fconnect%2Ftoken&name=GUAR
 ### Быстрый старт
 
 ```bash
-git clone https://github.com/GUAR-GH/koala-clash-guar-styled.git GUAR
+git clone https://github.com/GUAR-GH/GUAR-Clash.git GUAR
 cd GUAR
 pnpm install
 pnpm dev

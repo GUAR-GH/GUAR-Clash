@@ -41,7 +41,19 @@ export default {
     hideSidebar: '隐藏',
     toggleSidebar: '展开',
     updateAvailable: '更新',
-    loading: '加载中...'
+    loading: '加载中...',
+    profileSettings: '订阅设置'
+  },
+
+  tray: {
+    retest: '重新测试',
+    showWindow: '显示窗口',
+    disable: '禁用',
+    enable: '启用',
+    subscriptionConfig: '订阅配置',
+    quitKeepCore: '退出保留核心',
+    restartApp: '重启应用',
+    quitApp: '退出应用'
   },
 
   validation: {
@@ -263,7 +275,10 @@ export default {
       checkUpdate: '检查更新',
       openInBrowser: '在浏览器中打开',
       emptyTitle: '当前没有订阅',
-      emptyDescription: '如需添加订阅，请前往“我的订阅”页面',
+      emptyDescription: '复制订阅链接，然后从剪贴板添加',
+      addFromClipboard: '从剪贴板添加',
+      clipboardImportInvalid: '剪贴板中没有订阅链接',
+      clipboardReadFailed: '无法读取剪贴板',
       addProfile: '添加订阅',
       dropFileHint: '将配置文件拖放到此处',
       hwidLimitTitle: '设备数量超限',

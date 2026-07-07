@@ -26,7 +26,7 @@ const Settings: React.FC = () => {
             className="app-nodrag"
             title={t('pages.settings.githubRepo')}
             onClick={() => {
-              window.open('https://github.com/GUAR-GH/GUAR')
+              window.open('https://github.com/GUAR-GH/GUAR-Clash')
             }}
           >
             <Github className="text-lg" />

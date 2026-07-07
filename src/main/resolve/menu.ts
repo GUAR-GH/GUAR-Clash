@@ -172,13 +172,13 @@ export async function createApplicationMenu(): Promise<void> {
         {
           label: t('menu.learnMore'),
           click: () => {
-            shell.openExternal('https://github.com/GUAR-GH/GUAR')
+            shell.openExternal('https://github.com/GUAR-GH/GUAR-Clash')
           }
         },
         {
           label: t('menu.reportIssue'),
           click: () => {
-            shell.openExternal('https://github.com/GUAR-GH/GUAR/issues')
+            shell.openExternal('https://github.com/GUAR-GH/GUAR-Clash/issues')
           }
         },
         { type: 'separator' },

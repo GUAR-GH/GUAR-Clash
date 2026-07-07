@@ -526,6 +526,16 @@
   opacity: 0.6;
 }
 
+.wc-win .wc-settings {
+  width: 36px;
+}
+
+.wc-win .wc-settings:hover {
+  background: color-mix(in oklab, var(--accent) 46%, transparent);
+  color: var(--foreground);
+  border-bottom-color: color-mix(in oklab, var(--stroke-power-on) 65%, transparent);
+}
+
 * {
   user-select: none;
 }

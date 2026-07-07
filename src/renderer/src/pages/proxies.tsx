@@ -5,6 +5,7 @@ import { Card, CardContent } from '@renderer/components/ui/card'
 import { Spinner } from '@renderer/components/ui/spinner'
 import BasePage from '@renderer/components/base/base-page'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import {
   getImageDataURL,
   mihomoChangeProxy,
@@ -43,6 +44,10 @@ const Proxies: React.FC = () => {
   const { mode = 'rule' } = controledMihomoConfig || {}
   const { groups = [], mutate } = useGroups()
   const { appConfig } = useAppConfig()
+  const { profileConfig } = useProfileConfig()
+  const currentProfile = profileConfig?.current
+    ? profileConfig.items.find((item) => item.id === profileConfig.current) ?? null
+    : null
   const {
     proxyDisplayLayout = 'double',
     groupDisplayLayout = 'double',
@@ -410,6 +415,16 @@ const Proxies: React.FC = () => {
         </div>
       ) : (
         <div className="h-[calc(100vh-58px)]">
+          {currentProfile?.announce && (
+            <div className="px-2 pt-2 pb-1">
+              <div
+                data-guide="proxies-profile-announce"
+                className="max-h-20 overflow-y-auto rounded-md border border-stroke/65 bg-card/35 px-3 py-2 text-center text-xs font-medium leading-snug whitespace-pre-line text-muted-foreground"
+              >
+                {currentProfile.announce}
+              </div>
+            </div>
+          )}
           <GroupedVirtuoso
             ref={virtuosoRef}
             groupCounts={groupCounts}

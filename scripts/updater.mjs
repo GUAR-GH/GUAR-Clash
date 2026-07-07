@@ -5,7 +5,7 @@ import { extractVersionSection } from './changelog.mjs'
 const pkg = readFileSync('package.json', 'utf-8')
 const rawChangelog = readFileSync('changelog.md', 'utf-8')
 const { version } = JSON.parse(pkg)
-const releaseRepo = process.env.RELEASE_REPO || 'GUAR-GH/koala-clash-guar-styled'
+const releaseRepo = process.env.RELEASE_REPO || 'GUAR-GH/GUAR-Clash'
 const productName = 'GUAR Clash'
 const linuxProductName = 'GUAR.Clash'
 

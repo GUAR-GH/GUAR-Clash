@@ -41,7 +41,19 @@ export default {
     hideSidebar: 'Hide',
     toggleSidebar: 'Expand',
     updateAvailable: 'Update',
-    loading: 'Loading...'
+    loading: 'Loading...',
+    profileSettings: 'Profile Settings'
+  },
+
+  tray: {
+    retest: 'Retest',
+    showWindow: 'Show Window',
+    disable: 'Disable',
+    enable: 'Enable',
+    subscriptionConfig: 'Subscription Config',
+    quitKeepCore: 'Quit Keep Core',
+    restartApp: 'Restart App',
+    quitApp: 'Quit App'
   },
 
   validation: {
@@ -188,7 +200,10 @@ export default {
       checkUpdate: 'Check for updates',
       openInBrowser: 'Open in browser',
       emptyTitle: 'No profile yet',
-      emptyDescription: 'To add a profile, open the \'My Subscription\' page',
+      emptyDescription: 'Copy a subscription link and add it from clipboard',
+      addFromClipboard: 'Add from clipboard',
+      clipboardImportInvalid: 'Clipboard does not contain a subscription link',
+      clipboardReadFailed: 'Could not read clipboard',
       addProfile: 'Add Profile',
       dropFileHint: 'Drop config file here',
       hwidLimitTitle: 'Device limit exceeded',

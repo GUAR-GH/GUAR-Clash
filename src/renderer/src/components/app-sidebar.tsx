@@ -105,20 +105,22 @@ const AppSidebar: React.FC = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex flex-col items-center gap-2">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip={t('common.toggleSidebar')} onClick={toggleSidebar} className="cursor-pointer">
-                {collapsed ? (
-                  <ExpandedIcon className="size-4 shrink-0" />
-                ) : (
-                  <CollapsedIcon className="size-4 shrink-0" />
-                )}
-                <span>{t('common.hideSidebar')}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip={t('common.toggleSidebar')}
+              onClick={toggleSidebar}
+              className="cursor-pointer w-full"
+            >
+              {collapsed ? (
+                <ExpandedIcon className="size-4 shrink-0" />
+              ) : (
+                <CollapsedIcon className="size-4 shrink-0" />
+              )}
+              <span>{t('common.hideSidebar')}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
       {showRuntimeConfig && <ConfigViewer onClose={() => setShowRuntimeConfig(false)} />}
     </Sidebar>

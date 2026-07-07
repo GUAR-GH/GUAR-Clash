@@ -6,11 +6,12 @@ import { Button } from '@renderer/components/ui/button'
 import { Switch } from '@renderer/components/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 import useSWR from 'swr'
-import { checkAutoRun, disableAutoRun, enableAutoRun, relaunchApp } from '@renderer/utils/ipc'
+import { checkAutoRun, disableAutoRun, enableAutoRun, relaunchApp, setNativeTheme } from '@renderer/utils/ipc'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
 import ConfirmModal from '../base/base-confirm'
 import { useTranslation } from 'react-i18next'
-import { MessageCircleQuestionMark } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { MessageCircleQuestionMark, Moon, Sun } from 'lucide-react'
 
 interface GeneralConfigProps {
   showHiddenSettings: boolean
@@ -21,10 +22,13 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
   const { t } = useTranslation()
   const { data: enable, mutate: mutateEnable } = useSWR('checkAutoRun', checkAutoRun)
   const { appConfig, patchAppConfig } = useAppConfig()
+  const { setTheme, resolvedTheme } = useTheme()
   const {
     silentStart = false,
-    disableGPU = false
+    disableGPU = false,
+    appTheme = 'system'
   } = appConfig || {}
+  const isDark = resolvedTheme === 'dark' || appTheme === 'dark'
 
   const [showRestartConfirm, setShowRestartConfirm] = useState(false)
   const [pendingDisableGPU, setPendingDisableGPU] = useState(disableGPU)
@@ -56,7 +60,7 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
       <SettingCard>
         <SettingItem title={t('settings.general.autoStart')} divider>
           <Switch
-            checked={enable}
+            checked={enable ?? false}
             onCheckedChange={async (value) => {
               try {
                 if (value) {
@@ -71,6 +75,21 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
               }
             }}
           />
+        </SettingItem>
+        <SettingItem title={t('settings.appearance.backgroundColor')} divider>
+          <div className="flex items-center gap-2">
+            <Moon className="size-4 text-muted-foreground" />
+            <Switch
+              checked={isDark}
+              onCheckedChange={(value) => {
+                const newTheme = value ? 'dark' : 'light'
+                setTheme(newTheme)
+                setNativeTheme(newTheme)
+                patchAppConfig({ appTheme: newTheme })
+              }}
+            />
+            <Sun className="size-4 text-muted-foreground" />
+          </div>
         </SettingItem>
         <SettingItem title={t('settings.general.silentStart')} divider={showHiddenSettings}>
           <Switch

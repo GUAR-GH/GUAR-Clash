@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog, net, shell, type MessageBoxOptions } from 'electron'
 import { t } from '../utils/i18n'
 
-const UPDATE_REPO = 'GUAR-GH/koala-clash-guar-styled'
+const UPDATE_REPO = 'GUAR-GH/GUAR-Clash'
 const LATEST_RELEASE_URL = `https://api.github.com/repos/${UPDATE_REPO}/releases/latest`
 const MAX_CHANGELOG_LENGTH = 1800
 

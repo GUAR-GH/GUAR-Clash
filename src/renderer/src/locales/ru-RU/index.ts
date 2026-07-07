@@ -41,7 +41,19 @@ export default {
     hideSidebar: 'Скрыть',
     toggleSidebar: 'Раскрыть',
     updateAvailable: 'Обновление',
-    loading: 'Загрузка...'
+    loading: 'Загрузка...',
+    profileSettings: 'Настройки профиля'
+  },
+
+  tray: {
+    retest: 'Перетест',
+    showWindow: 'Показать окно',
+    disable: 'Отключить',
+    enable: 'Включить',
+    subscriptionConfig: 'Конфигурация подписки',
+    quitKeepCore: 'Выйти, сохранив ядро',
+    restartApp: 'Перезапустить приложение',
+    quitApp: 'Выйти из приложения'
   },
 
   validation: {
@@ -189,7 +201,10 @@ export default {
       checkUpdate: 'Проверить обновления',
       openInBrowser: 'Открыть в браузере',
       emptyTitle: 'Профиля пока нет',
-      emptyDescription: 'Чтобы добавить профиль перейдите на страницу \'Моя подписка\'',
+      emptyDescription: 'Скопируйте ссылку на подписку и добавьте её из буфера обмена',
+      addFromClipboard: 'Добавить из буфера обмена',
+      clipboardImportInvalid: 'В буфере обмена нет ссылки на подписку',
+      clipboardReadFailed: 'Не удалось прочитать буфер обмена',
       addProfile: 'Добавить профиль',
       dropFileHint: 'Перетащите файл конфигурации сюда',
       hwidLimitTitle: 'Лимит устройств превышен',

@@ -4,24 +4,13 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useGroups } from '@renderer/hooks/use-groups'
-import {
-  triggerSysProxy,
-  updateTrayIcon,
-  mihomoHotReloadConfig
-} from '@renderer/utils/ipc'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
 import NumberFlow from '@number-flow/react'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import {
-  WifiOff,
-  ChevronRight,
-  ArrowUp,
-  ArrowDown,
-  PowerIcon,
-  PauseIcon
-} from 'lucide-react'
+import { WifiOff, ChevronRight, ArrowUp, ArrowDown, PowerIcon, PauseIcon } from 'lucide-react'
 import { Spinner } from '@renderer/components/ui/spinner'
 import { CharacterMorph } from '@renderer/components/ui/character-morph'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -92,10 +81,7 @@ const Home: React.FC = () => {
 
   const isDisabled =
     loading ||
-    (mainSwitchMode === 'sysproxy' &&
-      writeSysProxy &&
-      sysProxyMode == 'manual' &&
-      sysProxyDisabled)
+    (mainSwitchMode === 'sysproxy' && writeSysProxy && sysProxyMode == 'manual' && sysProxyDisabled)
 
   const status = loading
     ? loadingDirection === 'connecting'
@@ -126,7 +112,8 @@ const Home: React.FC = () => {
   const trafficTotal = subscription?.total ?? 0
   const trafficRemaining = trafficTotal > 0 ? trafficTotal - trafficUsed : 0
   const expireTimestamp = subscription?.expire ?? 0
-  const expireDate = expireTimestamp > 0 ? dayjs.unix(expireTimestamp).format('L') : t('pages.home.never')
+  const expireDate =
+    expireTimestamp > 0 ? dayjs.unix(expireTimestamp).format('L') : t('pages.home.never')
 
   const firstGroup = groups?.[0]
   const supportUrl = currentProfile?.supportUrl
@@ -199,7 +186,9 @@ const Home: React.FC = () => {
         <div className="h-full w-full flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 max-w-75 p-7 text-center">
             <WifiOff className="size-16 text-muted-foreground" />
-            <h2 className="text-xl font-semibold text-foreground">{t('pages.profiles.emptyTitle')}</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              {t('pages.profiles.emptyTitle')}
+            </h2>
             <p className="text-sm font-medium text-muted-foreground text-center">
               {t('pages.profiles.emptyDescription')}
             </p>
@@ -239,14 +228,6 @@ const Home: React.FC = () => {
                   )}
                 </div>
               </div>
-              {currentProfile.announce && (
-                <div
-                  data-guide="home-profile-announce"
-                  className="mt-2 text-center text-sm font-medium whitespace-pre-line text-foreground/90"
-                >
-                  {currentProfile.announce}
-                </div>
-              )}
               {subscription && (
                 <div className="mt-3 border-t border-stroke/65 pt-3">
                   <div className="grid grid-cols-2 gap-3">
@@ -255,11 +236,15 @@ const Home: React.FC = () => {
                         {t('pages.home.trafficRemaining')}
                       </span>
                       <span className="text-base font-semibold text-foreground">
-                        {trafficTotal > 0 ? formatBytes(trafficRemaining) : t('pages.home.unlimited')}
+                        {trafficTotal > 0
+                          ? formatBytes(trafficRemaining)
+                          : t('pages.home.unlimited')}
                       </span>
                     </div>
                     <div className="flex flex-col items-center gap-1 text-center">
-                      <span className="text-xs text-muted-foreground">{t('pages.home.expires')}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('pages.home.expires')}
+                      </span>
                       <span className="text-base font-semibold text-foreground">{expireDate}</span>
                     </div>
                   </div>

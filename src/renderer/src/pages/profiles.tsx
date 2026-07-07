@@ -15,9 +15,37 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
 import { useTranslation } from 'react-i18next'
-import { FileDown, RefreshCcw } from 'lucide-react'
+import { ClipboardPaste, FileDown, RefreshCcw } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@renderer/components/ui/tooltip'
 
 const emptyItems: ProfileItem[] = []
+
+function getProfileFromClipboardText(text: string): Partial<ProfileItem> | null {
+  const value = text.trim()
+  if (!value) return null
+
+  try {
+    const parsed = new URL(value)
+    if (parsed.protocol === 'guar:') {
+      const action = (parsed.host || parsed.pathname.replace(/^\/+/, '')).toLowerCase()
+      if (action !== 'install-config') return null
+      const url = parsed.searchParams.get('url')?.trim()
+      if (!url) return null
+      return {
+        type: 'remote',
+        url,
+        name: parsed.searchParams.get('name')?.trim() || undefined
+      }
+    }
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return { type: 'remote', url: value }
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
 
 const Profiles: React.FC = () => {
   const { t } = useTranslation()
@@ -34,6 +62,7 @@ const Profiles: React.FC = () => {
   const [sortedItems, setSortedItems] = useState(itemsArray)
   const [updating, setUpdating] = useState(false)
   const [switching, setSwitching] = useState(false)
+  const [clipboardImporting, setClipboardImporting] = useState(false)
   const [fileOver, setFileOver] = useState(false)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -115,6 +144,23 @@ const Profiles: React.FC = () => {
     }
   }, [])
 
+  const handleImportFromClipboard = async (): Promise<void> => {
+    setClipboardImporting(true)
+    try {
+      const text = await navigator.clipboard.readText()
+      const item = getProfileFromClipboardText(text)
+      if (!item) {
+        toast.error(t('pages.profiles.clipboardImportInvalid'))
+        return
+      }
+      await addProfileItem(item)
+    } catch {
+      toast.error(t('pages.profiles.clipboardReadFailed'))
+    } finally {
+      setClipboardImporting(false)
+    }
+  }
+
   useEffect(() => {
     const el = pageRef.current
     if (!el) return
@@ -140,28 +186,45 @@ const Profiles: React.FC = () => {
       title={t('pages.profiles.title')}
       header={
         <>
-          <Button
-            size="icon-sm"
-            title={t('pages.profiles.updateAll')}
-            className="app-nodrag"
-            variant="ghost"
-            aria-label={t('pages.profiles.updateAll')}
-            onClick={async () => {
-              setUpdating(true)
-              for (const item of itemsArray) {
-                if (item.id === current) continue
-                if (item.type !== 'remote') continue
-                await addProfileItem(item)
-              }
-              const currentItem = itemsArray.find((item) => item.id === current)
-              if (currentItem && currentItem.type === 'remote') {
-                await addProfileItem(currentItem)
-              }
-              setUpdating(false)
-            }}
-          >
-            <RefreshCcw className={`text-lg ${updating ? 'animate-spin' : ''}`} />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon-sm"
+                className="app-nodrag"
+                variant="ghost"
+                disabled={clipboardImporting}
+                onClick={handleImportFromClipboard}
+              >
+                <ClipboardPaste className={`text-lg ${clipboardImporting ? 'animate-pulse' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('pages.profiles.addFromClipboard')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon-sm"
+                className="app-nodrag"
+                variant="ghost"
+                onClick={async () => {
+                  setUpdating(true)
+                  for (const item of itemsArray) {
+                    if (item.id === current) continue
+                    if (item.type !== 'remote') continue
+                    await addProfileItem(item)
+                  }
+                  const currentItem = itemsArray.find((item) => item.id === current)
+                  if (currentItem && currentItem.type === 'remote') {
+                    await addProfileItem(currentItem)
+                  }
+                  setUpdating(false)
+                }}
+              >
+                <RefreshCcw className={`text-lg ${updating ? 'animate-spin' : ''}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('pages.profiles.updateAll')}</TooltipContent>
+          </Tooltip>
         </>
       }
     >
@@ -184,6 +247,14 @@ const Profiles: React.FC = () => {
             <p className="text-muted-foreground/70 text-sm whitespace-pre-line">
               {t('pages.profiles.emptyDescription')}
             </p>
+            <Button
+              className="mt-1"
+              disabled={clipboardImporting}
+              onClick={handleImportFromClipboard}
+            >
+              <ClipboardPaste className="size-4" />
+              {t('pages.profiles.addFromClipboard')}
+            </Button>
           </div>
         </div>
       ) : (

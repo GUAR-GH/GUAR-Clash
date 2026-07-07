@@ -7,8 +7,62 @@ out
 .DS_Store
 *.log*
 .idea
+.vscode
 *.ttf
 .serena
 .zed
 *.tsbuildinfo
 latest.yml
+
+# Build artifacts
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.pacman
+*.tar.gz
+*.zip
+*.blockmap
+*.yml
+*.yaml
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# OS files
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+.DS_Store
+
+# Electron builder
+electron-builder.yml
+electron-builder.json
+
+# Logs and temp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.bak
+*.swp
+*.tmp
+.cache
+.temp
