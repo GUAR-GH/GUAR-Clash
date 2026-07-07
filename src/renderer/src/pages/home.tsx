@@ -5,12 +5,21 @@ import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-c
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useGroups } from '@renderer/hooks/use-groups'
 import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
+import { Button } from '@renderer/components/ui/button'
 import NumberFlow from '@number-flow/react'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
-import { WifiOff, ChevronRight, ArrowUp, ArrowDown, PowerIcon, PauseIcon } from 'lucide-react'
+import {
+  WifiOff,
+  ChevronRight,
+  ArrowUp,
+  ArrowDown,
+  PowerIcon,
+  PauseIcon,
+  ClipboardPaste
+} from 'lucide-react'
 import { Spinner } from '@renderer/components/ui/spinner'
 import { CharacterMorph } from '@renderer/components/ui/character-morph'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -25,6 +34,33 @@ function formatBytes(bytes: number): string {
 
 // Module-level variable: persists across component mounts/unmounts
 let connectionStartTime: number | null = null
+
+function getProfileFromClipboardText(text: string): Partial<ProfileItem> | null {
+  const value = text.trim()
+  if (!value) return null
+
+  try {
+    const parsed = new URL(value)
+    if (parsed.protocol === 'guar:') {
+      const action = (parsed.host || parsed.pathname.replace(/^\/+/, '')).toLowerCase()
+      if (action !== 'install-config') return null
+      const url = parsed.searchParams.get('url')?.trim()
+      if (!url) return null
+      return {
+        type: 'remote',
+        url,
+        name: parsed.searchParams.get('name')?.trim() || undefined
+      }
+    }
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return { type: 'remote', url: value }
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
 
 const Home: React.FC = () => {
   const { t } = useTranslation()
@@ -41,7 +77,7 @@ const Home: React.FC = () => {
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const sysProxyDisabled = mixedPort == 0
 
-  const { profileConfig } = useProfileConfig()
+  const { profileConfig, addProfileItem } = useProfileConfig()
   const { groups } = useGroups()
   const navigate = useNavigate()
   const hasProfiles = (profileConfig?.items?.length ?? 0) > 0
@@ -59,6 +95,7 @@ const Home: React.FC = () => {
     }
     return 0
   })
+  const [clipboardImporting, setClipboardImporting] = useState(false)
 
   const isSelected = (tun?.enable ?? false) || proxyMode
 
@@ -180,6 +217,23 @@ const Home: React.FC = () => {
     }
   }
 
+  const handleImportFromClipboard = async (): Promise<void> => {
+    setClipboardImporting(true)
+    try {
+      const text = await navigator.clipboard.readText()
+      const item = getProfileFromClipboardText(text)
+      if (!item) {
+        toast.error(t('pages.profiles.clipboardImportInvalid'))
+        return
+      }
+      await addProfileItem(item)
+    } catch {
+      toast.error(t('pages.profiles.clipboardReadFailed'))
+    } finally {
+      setClipboardImporting(false)
+    }
+  }
+
   return (
     <BasePage>
       {!hasProfiles ? (
@@ -192,6 +246,14 @@ const Home: React.FC = () => {
             <p className="text-sm font-medium text-muted-foreground text-center">
               {t('pages.profiles.emptyDescription')}
             </p>
+            <Button
+              className="mt-1 gap-2"
+              disabled={clipboardImporting}
+              onClick={handleImportFromClipboard}
+            >
+              <ClipboardPaste className={clipboardImporting ? 'size-4 animate-pulse' : 'size-4'} />
+              {t('pages.profiles.addFromClipboard')}
+            </Button>
           </div>
         </div>
       ) : (

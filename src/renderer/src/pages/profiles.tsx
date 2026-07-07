@@ -241,18 +241,18 @@ const Profiles: React.FC = () => {
       )}
 
       {sortedItems.length === 0 ? (
-        <div className="h-full w-full flex justify-center items-center">
+        <div className="flex h-[calc(100vh-80px)] w-full items-center justify-center py-8">
           <div className="flex max-w-72 flex-col items-center gap-3 px-6 text-center">
             <h2 className="text-muted-foreground text-lg font-medium">{t('pages.profiles.emptyTitle')}</h2>
             <p className="text-muted-foreground/70 text-sm whitespace-pre-line">
               {t('pages.profiles.emptyDescription')}
             </p>
             <Button
-              className="mt-1"
+              className="mt-2"
               disabled={clipboardImporting}
               onClick={handleImportFromClipboard}
             >
-              <ClipboardPaste className="size-4" />
+              <ClipboardPaste className="mr-2 size-4" />
               {t('pages.profiles.addFromClipboard')}
             </Button>
           </div>
