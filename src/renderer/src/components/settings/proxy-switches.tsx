@@ -7,7 +7,14 @@ import { Switch } from '@renderer/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
+import { useProfileConfig } from '@renderer/hooks/use-profile-config'
+import {
+  triggerSysProxy,
+  updateTrayIcon,
+  mihomoHotReloadConfig,
+  mihomoCloseAllConnections,
+  patchMihomoConfig
+} from '@renderer/utils/ipc'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Settings } from 'lucide-react'
@@ -16,17 +23,22 @@ const ProxySwitches: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { tun } = controledMihomoConfig || {}
+  const { tun, mode = 'rule' } = controledMihomoConfig || {}
+  const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const { appConfig, patchAppConfig } = useAppConfig()
   const {
     sysProxy,
     proxyMode = false,
     onlyActiveDevice = false,
-    mainSwitchMode = 'tun'
+    mainSwitchMode = 'tun',
+    autoCloseConnection = true
   } = appConfig || {}
-  const { enable: writeSysProxy = true, mode } = sysProxy || {}
-  const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
+  const { enable: writeSysProxy = true, mode: sysProxyMode } = sysProxy || {}
   const sysProxyDisabled = mixedPort == 0
+
+  const { profileConfig, updateProfileItem } = useProfileConfig()
+  const remoteItem = profileConfig?.items?.find((i) => i.type === 'remote')
+  const subAutoUpdate = remoteItem?.autoUpdate ?? false
 
   return (
     <SettingCard>
@@ -39,18 +51,39 @@ const ProxySwitches: React.FC = () => {
         >
           <TabsList>
             <TabsTrigger value="tun">{t('settings.advanced.mainSwitchTun')}</TabsTrigger>
-            <TabsTrigger value="sysproxy">{t('settings.advanced.mainSwitchProxyMode')}</TabsTrigger>
+            <TabsTrigger value="sysproxy">
+              {t('settings.advanced.mainSwitchProxyMode')}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </SettingItem>
+      <SettingItem title={t('settings.advanced.outboundModeTitle')} divider>
+        <Tabs
+          value={mode}
+          onValueChange={async (value) => {
+            const m = value as 'rule' | 'global'
+            try {
+              await patchControledMihomoConfig({ mode: m })
+              await patchMihomoConfig({ mode: m })
+              if (autoCloseConnection) {
+                await mihomoCloseAllConnections()
+              }
+              window.electron.ipcRenderer.send('updateTrayMenu')
+            } catch (e) {
+              toast.error(`${e}`)
+            }
+          }}
+        >
+          <TabsList>
+            <TabsTrigger value="rule">{t('settings.advanced.outboundModeRule')}</TabsTrigger>
+            <TabsTrigger value="global">{t('settings.advanced.outboundModeGlobal')}</TabsTrigger>
           </TabsList>
         </Tabs>
       </SettingItem>
       <SettingItem
         title={t('sider.virtualInterface')}
         actions={
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => navigate('/tun')}
-          >
+          <Button size="icon-sm" variant="ghost" onClick={() => navigate('/tun')}>
             <Settings className="text-lg" />
           </Button>
         }
@@ -73,20 +106,17 @@ const ProxySwitches: React.FC = () => {
       <SettingItem
         title={t('sider.proxyMode')}
         actions={
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => navigate('/sysproxy')}
-          >
+          <Button size="icon-sm" variant="ghost" onClick={() => navigate('/sysproxy')}>
             <Settings className="text-lg" />
           </Button>
         }
+        divider
       >
         <Switch
           checked={proxyMode}
-          disabled={writeSysProxy && mode == 'manual' && sysProxyDisabled}
+          disabled={writeSysProxy && sysProxyMode == 'manual' && sysProxyDisabled}
           onCheckedChange={async (enable: boolean) => {
-            if (enable && writeSysProxy && mode == 'manual' && sysProxyDisabled) return
+            if (enable && writeSysProxy && sysProxyMode == 'manual' && sysProxyDisabled) return
             try {
               if (enable) {
                 await patchAppConfig({ proxyMode: true })
@@ -104,6 +134,27 @@ const ProxySwitches: React.FC = () => {
               window.electron.ipcRenderer.send('updateFloatingWindow')
               window.electron.ipcRenderer.send('updateTrayMenu')
               await updateTrayIcon()
+            } catch (e) {
+              toast.error(`${e}`)
+            }
+          }}
+        />
+      </SettingItem>
+      <SettingItem title={t('settings.advanced.subAutoUpdate')}>
+        <Switch
+          checked={subAutoUpdate}
+          disabled={!remoteItem}
+          onCheckedChange={async (value: boolean) => {
+            if (!remoteItem) return
+            try {
+              await updateProfileItem({
+                ...remoteItem,
+                autoUpdate: value,
+                interval:
+                  value && (!remoteItem.interval || remoteItem.interval === 0)
+                    ? 1440
+                    : remoteItem.interval
+              })
             } catch (e) {
               toast.error(`${e}`)
             }

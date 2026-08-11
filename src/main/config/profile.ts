@@ -1,5 +1,5 @@
 import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath, rulePath } from '../utils/dirs'
-import { mkdir, readFile, rm, writeFile } from 'fs/promises'
+import { mkdir, readFile, rename, rm, writeFile } from 'fs/promises'
 import { restartCore } from '../core/manager'
 import { getRuntimeConfig } from '../core/factory'
 import { mihomoHotReloadConfig } from '../core/mihomoApi'
@@ -14,6 +14,12 @@ import { deepMerge } from '../utils/merge'
 import { getUserAgent } from '../utils/userAgent'
 import { getHWID, getDeviceOS, getOSVersion, getDeviceModel } from '../utils/deviceInfo'
 import { t } from '../utils/i18n'
+
+// Фиксированные слоты профилей правил:
+// слот 1 = единственная подписка (remote, locked), слоты 2/3 = локальные копии для ручного редактирования
+export const SUBSCRIPTION_SLOT = 'profile-1'
+export const COPY_SLOTS = ['profile-2', 'profile-3']
+export const SLOT_IDS = [SUBSCRIPTION_SLOT, ...COPY_SLOTS]
 
 let profileConfig: ProfileConfig // profile.yaml
 
@@ -68,14 +74,15 @@ export async function updateProfileItem(item: ProfileItem): Promise<void> {
 }
 
 export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> {
-  if (item.url && item.type === 'remote') {
-    const config = await getProfileConfig()
-    const duplicate = config.items?.find((existing) => existing.url === item.url && existing.id !== item.id)
-    if (duplicate) {
-      throw new Error(t('error.duplicateProfile'))
-    }
+  const isRemote = item.type === 'remote'
+  if (isRemote) {
+    // Единая подписка: remote всегда живёт в фиксированном слоте profile-1
+    item = { ...item, id: SUBSCRIPTION_SLOT }
   }
   const newItem = await createProfile(item)
+  if (isRemote) {
+    ;(newItem as ProfileItem).locked = true
+  }
   const config = await getProfileConfig()
   const isExisting = !!(await getProfileItem(newItem.id))
   if (isExisting) {
@@ -86,11 +93,78 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> 
     await setProfileConfig(config)
   }
 
-  if (!isExisting || !config.current) {
+  if (isRemote) {
+    // При обновлении подписки: инициализируем пустые слоты 2/3 и сбрасываем активный на слот 1,
+    // чтобы перезапись конфига новыми правилами не затёрла правки пользователя в 2/3.
+    await ensureCopySlots()
+    await changeCurrentProfile(SUBSCRIPTION_SLOT)
+  } else if (!config.current) {
     await changeCurrentProfile(newItem.id)
   }
 }
 
+// Гарантирует наличие слотов 2/3 (локальные копии). Если файл слота пуст/отсутствует —
+// копирует содержимое файла подписки (слот 1). Иначе не трогает (сохраняет правки пользователя).
+export async function ensureCopySlots(): Promise<void> {
+  const config = await getProfileConfig()
+  if (!config.items) config.items = []
+  const subFile = profilePath(SUBSCRIPTION_SLOT)
+  const hasSub = existsSync(subFile)
+  for (const slotId of COPY_SLOTS) {
+    if (!config.items.some((i) => i.id === slotId)) {
+      config.items.push({
+        id: slotId,
+        type: 'local',
+        name: slotId === COPY_SLOTS[0] ? 'Profile 2' : 'Profile 3',
+        file: '',
+        updated: Date.now()
+      } as ProfileItem)
+    }
+    if (hasSub) {
+      const slotFile = profilePath(slotId)
+      let empty = true
+      if (existsSync(slotFile)) {
+        const content = await readFile(slotFile, 'utf-8')
+        empty = content.trim() === ''
+      }
+      if (empty) {
+        const content = await readFile(subFile, 'utf-8')
+        await writeFile(slotFile, content, 'utf-8')
+      }
+    }
+  }
+  await setProfileConfig(config)
+}
+
+// Миграция на модель 3 фиксированных слотов для существующих пользователей.
+export async function migrateProfileSlots(): Promise<void> {
+  const config = await getProfileConfig(true)
+  if (!config.items) config.items = []
+  const remotes = config.items.filter((i) => i.type === 'remote')
+  if (remotes.length > 0) {
+    const sub = remotes[0]
+    if (sub.id !== SUBSCRIPTION_SLOT) {
+      const oldFile = profilePath(sub.id)
+      const newFile = profilePath(SUBSCRIPTION_SLOT)
+      if (existsSync(oldFile) && !existsSync(newFile)) {
+        await rename(oldFile, newFile)
+      } else if (existsSync(oldFile) && existsSync(newFile)) {
+        await rm(oldFile)
+      }
+      sub.id = SUBSCRIPTION_SLOT
+    }
+    sub.locked = true
+    // Лишние remote (legacy) — оставляем только один (слот подписки)
+    config.items = config.items.filter((i) => i.type !== 'remote' || i.id === SUBSCRIPTION_SLOT)
+  }
+  await setProfileConfig(config)
+  await ensureCopySlots()
+  const cfg2 = await getProfileConfig()
+  if (!cfg2.current || !cfg2.items.some((i) => i.id === cfg2.current)) {
+    cfg2.current = SUBSCRIPTION_SLOT
+    await setProfileConfig(cfg2)
+  }
+}
 export async function removeProfileItem(id: string): Promise<void> {
   const config = await getProfileConfig()
   config.items = config.items?.filter((item) => item.id !== id)

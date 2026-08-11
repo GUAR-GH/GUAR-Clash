@@ -2,7 +2,6 @@ import { Navigate } from 'react-router-dom'
 import Proxies from '@renderer/pages/proxies'
 import Rules from '@renderer/pages/rules'
 import Settings from '@renderer/pages/settings'
-import Profiles from '@renderer/pages/profiles'
 import Logs from '@renderer/pages/logs'
 import Connections from '@renderer/pages/connections'
 import Mihomo from '@renderer/pages/mihomo'
@@ -52,10 +51,6 @@ const routes = [
   {
     path: '/connections',
     element: <Connections />
-  },
-  {
-    path: '/profiles',
-    element: <Profiles />
   },
   {
     path: '/settings',

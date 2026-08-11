@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   HomeIcon,
-  ProfileIcon,
   ProxiesIcon,
   ConnectionsIcon,
   RulesIcon,
@@ -30,7 +29,6 @@ import guarLogo from '@renderer/assets/guar-logo.png'
 
 const navItems = [
   { key: 'main', path: '/home', icon: HomeIcon, i18nKey: 'sider.home' },
-  { key: 'profile', path: '/profiles', icon: ProfileIcon, i18nKey: 'sider.profileManagement' },
   { key: 'proxy', path: '/proxies', icon: ProxiesIcon, i18nKey: 'sider.proxyGroup' },
   { key: 'connection', path: '/connections', icon: ConnectionsIcon, i18nKey: 'sider.connection' },
   { key: 'rule', path: '/rules', icon: RulesIcon, i18nKey: 'sider.rules' },
@@ -38,7 +36,7 @@ const navItems = [
   { key: 'settings', path: '/settings', icon: SettingsIcon, i18nKey: 'common.settings' }
 ]
 
-const allowedWithoutProfiles = new Set(['main', 'profile', 'settings'])
+const allowedWithoutProfiles = new Set(['main', 'settings'])
 
 const AppSidebar: React.FC = () => {
   const { t } = useTranslation()

@@ -18,5 +18,6 @@ export {
   setProfileStr,
   changeCurrentProfile,
   updateProfileItem,
-  convertMrsRuleset
+  convertMrsRuleset,
+  migrateProfileSlots
 } from './profile'

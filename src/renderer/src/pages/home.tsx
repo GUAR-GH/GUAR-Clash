@@ -73,7 +73,7 @@ const Home: React.FC = () => {
   } = appConfig || {}
   const { enable: writeSysProxy = true, mode: sysProxyMode } = sysProxy || {}
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
-  const { tun, mode: outboundMode = 'rule' } = controledMihomoConfig || {}
+  const { tun } = controledMihomoConfig || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
   const sysProxyDisabled = mixedPort == 0
 
@@ -162,18 +162,6 @@ const Home: React.FC = () => {
       return undefined
     }
   }, [supportUrl])
-
-  useEffect(() => {
-    if (outboundMode !== 'global') return
-    patchControledMihomoConfig({ mode: 'rule' })
-      .then(() => mihomoHotReloadConfig())
-      .then(() => {
-        window.electron.ipcRenderer.send('updateTrayMenu')
-      })
-      .catch(() => {
-        // If core is still booting, the next normal reload will use rule mode from config.
-      })
-  }, [outboundMode, patchControledMihomoConfig])
 
   const onValueChange = async (enable: boolean): Promise<void> => {
     setLoading(true)

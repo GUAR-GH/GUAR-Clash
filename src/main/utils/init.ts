@@ -30,7 +30,8 @@ import {
   getAppConfig,
   getControledMihomoConfig,
   patchAppConfig,
-  patchControledMihomoConfig
+  patchControledMihomoConfig,
+  migrateProfileSlots
 } from '../config'
 import { app } from 'electron'
 import { startSSIDCheck } from '../sys/ssid'
@@ -163,10 +164,6 @@ async function migration(): Promise<void> {
     mihomoConfigPatch['external-controller'] = ''
   }
 
-  if (mihomoConfig.mode === 'global') {
-    mihomoConfigPatch.mode = 'rule'
-  }
-
   if (Object.keys(mihomoConfigPatch).length > 0) {
     await patchControledMihomoConfig(mihomoConfigPatch)
   }
@@ -213,6 +210,7 @@ export async function init(): Promise<void> {
     // migration failure should not block app startup
   }
   await migration()
+  await migrateProfileSlots()
 
   const [appConfig] = await Promise.all([
     getAppConfig(),
