@@ -33,7 +33,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle
 } from '@renderer/components/ui/alert-dialog'
-import { Settings, RefreshCcw, Trash2, Moon, Pencil } from 'lucide-react'
+import { Settings, RefreshCcw, Trash2, Moon, Pencil, Network, Route, Layers, Power } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 
@@ -170,9 +170,7 @@ const WindowControls: React.FC = () => {
         ...remoteItem,
         autoUpdate: value,
         interval:
-          value && (!remoteItem.interval || remoteItem.interval === 0)
-            ? 1440
-            : remoteItem.interval
+          value && (!remoteItem.interval || remoteItem.interval === 0) ? 1440 : remoteItem.interval
       })
     } catch (e) {
       toast.error(`${e}`)
@@ -197,6 +195,20 @@ const WindowControls: React.FC = () => {
     window.electron.ipcRenderer.invoke('windowClose')
   }
 
+  const Row: React.FC<{ icon: React.ReactNode; label: string; children: React.ReactNode }> = ({
+    icon,
+    label,
+    children
+  }) => (
+    <div className="flex items-center justify-between px-2 py-1">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-sm">{label}</span>
+      </div>
+      {children}
+    </div>
+  )
+
   const settingsButton = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -204,12 +216,9 @@ const WindowControls: React.FC = () => {
           <Settings className="size-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" side="bottom" className="w-72">
-        {/* Управление подпиской */}
-        <DropdownMenuItem
-          disabled={!remoteItem || updatingProfile}
-          onClick={updateCurrentProfile}
-        >
+      <DropdownMenuContent align="start" side="bottom" className="w-72 p-1">
+        {/* Подписка */}
+        <DropdownMenuItem disabled={!remoteItem || updatingProfile} onClick={updateCurrentProfile}>
           <RefreshCcw className={updatingProfile ? 'animate-spin' : undefined} />
           {t('profile.updateSubscription')}
         </DropdownMenuItem>
@@ -218,12 +227,8 @@ const WindowControls: React.FC = () => {
           {t('profile.delete')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {/* Тёмная тема */}
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <div className="flex items-center gap-2">
-            <Moon className="size-3.5 text-muted-foreground" />
-            <span className="text-sm">{t('settings.appearance.dark')}</span>
-          </div>
+        {/* Оформление */}
+        <Row icon={<Moon className="size-3.5 text-muted-foreground" />} label={t('settings.appearance.dark')}>
           <Switch
             checked={isDark}
             onCheckedChange={(value) => {
@@ -234,21 +239,19 @@ const WindowControls: React.FC = () => {
             }}
             className="scale-90"
           />
-        </div>
+        </Row>
         <DropdownMenuSeparator />
         {/* Автозапуск */}
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm">{t('settings.general.autoStart')}</span>
+        <Row icon={<Power className="size-3.5 text-muted-foreground" />} label={t('settings.general.autoStart')}>
           <Switch
             checked={autoRunEnabled ?? false}
             onCheckedChange={(value) => toggleAutoRun(Boolean(value))}
             className="scale-90"
           />
-        </div>
+        </Row>
         <DropdownMenuSeparator />
-        {/* Новые переключатели (внизу) */}
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm">{t('settings.advanced.mainSwitch')}</span>
+        {/* Режим и профили */}
+        <Row icon={<Network className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.mainSwitch')}>
           <Segmented
             value={mainSwitchMode}
             options={[
@@ -257,9 +260,8 @@ const WindowControls: React.FC = () => {
             ]}
             onChange={(v) => patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })}
           />
-        </div>
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm">{t('settings.advanced.outboundModeTitle')}</span>
+        </Row>
+        <Row icon={<Route className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.outboundModeTitle')}>
           <Segmented
             value={mode}
             options={[
@@ -268,18 +270,16 @@ const WindowControls: React.FC = () => {
             ]}
             onChange={(v) => onModeChange(v as 'rule' | 'global')}
           />
-        </div>
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm">{t('settings.advanced.subAutoUpdate')}</span>
+        </Row>
+        <Row icon={<RefreshCcw className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.subAutoUpdate')}>
           <Switch
             checked={subAutoUpdate}
             disabled={!remoteItem}
             onCheckedChange={(value) => onSubAutoUpdate(Boolean(value))}
             className="scale-90"
           />
-        </div>
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm">{t('settings.advanced.profilesTitle')}</span>
+        </Row>
+        <Row icon={<Layers className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.profilesTitle')}>
           <Segmented
             value={activeSlot}
             options={[
@@ -294,7 +294,7 @@ const WindowControls: React.FC = () => {
               }
             }}
           />
-        </div>
+        </Row>
         <DropdownMenuItem
           disabled={editDisabled}
           onSelect={(e) => {
