@@ -10,7 +10,16 @@ let controledMihomoConfig: Partial<MihomoConfig> // mihomo.yaml
 
 export async function getControledMihomoConfig(force = false): Promise<Partial<MihomoConfig>> {
   if (force || !controledMihomoConfig) {
-    const data = await readFile(controledMihomoConfigPath(), 'utf-8')
+    const path = controledMihomoConfigPath()
+    let data: string
+    try {
+      data = await readFile(path, 'utf-8')
+    } catch {
+      // файла ещё нет (чистый userData) — создаём из значений по умолчанию
+      controledMihomoConfig = defaultControledMihomoConfig
+      await writeFile(path, stringifyYaml(controledMihomoConfig), 'utf-8')
+      return controledMihomoConfig
+    }
     controledMihomoConfig = parseYaml<Partial<MihomoConfig>>(data) || defaultControledMihomoConfig
   }
   if (typeof controledMihomoConfig !== 'object')
