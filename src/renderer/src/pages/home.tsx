@@ -138,10 +138,10 @@ const Home: React.FC = () => {
   const elapsedMinutes = Math.floor((elapsed % 3600) / 60)
   const elapsedSeconds = elapsed % 60
 
-  // Current profile & subscription
+  // Подписка всегда отражает remote-профиль (слот 1), независимо от активного слота правил
   const currentProfile = useMemo(() => {
-    if (!profileConfig?.current || !profileConfig?.items) return null
-    return profileConfig.items.find((item) => item.id === profileConfig.current) ?? null
+    if (!profileConfig?.items) return null
+    return profileConfig.items.find((item) => item.type === 'remote') ?? null
   }, [profileConfig])
 
   const subscription = currentProfile?.extra

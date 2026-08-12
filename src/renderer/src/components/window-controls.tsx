@@ -22,7 +22,6 @@ import {
   DropdownMenuTrigger
 } from '@renderer/components/ui/dropdown-menu'
 import { Switch } from '@renderer/components/ui/switch'
-import { Tabs, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,13 +41,48 @@ import { useTheme } from 'next-themes'
 const SUBSCRIPTION_SLOT = 'profile-1'
 const SLOT_IDS = ['profile-1', 'profile-2', 'profile-3']
 
+interface SegOption {
+  value: string
+  label: string
+}
+
+const Segmented: React.FC<{
+  value: string
+  options: SegOption[]
+  onChange: (v: string) => void
+}> = ({ value, options, onChange }) => (
+  <div className="flex gap-0.5 rounded-md bg-accent/40 p-0.5">
+    {options.map((o) => (
+      <button
+        key={o.value}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation()
+          if (o.value !== value) onChange(o.value)
+        }}
+        className={`h-6 min-w-6 px-2 text-xs rounded-[5px] transition-colors ${
+          value === o.value
+            ? 'bg-foreground/90 text-background font-medium'
+            : 'text-muted-foreground hover:text-foreground'
+        }`}
+      >
+        {o.label}
+      </button>
+    ))}
+  </div>
+)
+
 const WindowControls: React.FC = () => {
   const { t } = useTranslation()
   const { appConfig, patchAppConfig } = useAppConfig()
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { mode = 'rule' } = controledMihomoConfig || {}
-  const { useWindowFrame = false, appTheme = 'system', mainSwitchMode = 'tun', autoCloseConnection = true } =
-    appConfig || {}
+  const {
+    useWindowFrame = false,
+    appTheme = 'system',
+    mainSwitchMode = 'tun',
+    autoCloseConnection = true
+  } = appConfig || {}
   const { setTheme, resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark' || appTheme === 'dark'
   const [isFocused, setIsFocused] = useState(document.hasFocus())
@@ -56,7 +90,6 @@ const WindowControls: React.FC = () => {
 
   const { profileConfig, addProfileItem, removeProfileItem, changeCurrentProfile, updateProfileItem } =
     useProfileConfig()
-  const currentProfile = profileConfig?.items?.find((item) => item.id === profileConfig.current)
   const remoteItem = profileConfig?.items?.find((i) => i.type === 'remote')
   const subAutoUpdate = remoteItem?.autoUpdate ?? false
   const current = profileConfig?.current
@@ -84,10 +117,10 @@ const WindowControls: React.FC = () => {
   }, [useWindowFrame])
 
   const updateCurrentProfile = async (): Promise<void> => {
-    if (!currentProfile || currentProfile.type !== 'remote') return
+    if (!remoteItem) return
     setUpdatingProfile(true)
     try {
-      await addProfileItem(currentProfile)
+      await addProfileItem(remoteItem)
       toast.success(t('profile.updateSubscription'))
     } catch (e) {
       toast.error(`${e}`)
@@ -111,8 +144,8 @@ const WindowControls: React.FC = () => {
   }
 
   const handleDeleteProfile = (): void => {
-    if (currentProfile) {
-      setTimeout(() => removeProfileItem(currentProfile.id), 200)
+    if (remoteItem) {
+      setTimeout(() => removeProfileItem(remoteItem.id), 200)
       setConfirmDeleteOpen(false)
     }
   }
@@ -137,7 +170,9 @@ const WindowControls: React.FC = () => {
         ...remoteItem,
         autoUpdate: value,
         interval:
-          value && (!remoteItem.interval || remoteItem.interval === 0) ? 1440 : remoteItem.interval
+          value && (!remoteItem.interval || remoteItem.interval === 0)
+            ? 1440
+            : remoteItem.interval
       })
     } catch (e) {
       toast.error(`${e}`)
@@ -170,99 +205,15 @@ const WindowControls: React.FC = () => {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="bottom" className="w-72">
-        {/* TUN / Прокси — основной переключатель */}
-        <div className="flex flex-col gap-1 px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-          <span className="text-sm">{t('settings.advanced.mainSwitch')}</span>
-          <Tabs
-            value={mainSwitchMode}
-            onValueChange={(v) => {
-              patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })
-            }}
-          >
-            <TabsList className="w-full">
-              <TabsTrigger value="tun" className="flex-1 text-xs">
-                {t('settings.advanced.mainSwitchTun')}
-              </TabsTrigger>
-              <TabsTrigger value="sysproxy" className="flex-1 text-xs">
-                {t('settings.advanced.mainSwitchProxyMode')}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        {/* Правила / Глобальный — режим маршрутизации */}
-        <div className="flex flex-col gap-1 px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-          <span className="text-sm">{t('settings.advanced.outboundModeTitle')}</span>
-          <Tabs value={mode} onValueChange={(v) => onModeChange(v as 'rule' | 'global')}>
-            <TabsList className="w-full">
-              <TabsTrigger value="rule" className="flex-1 text-xs">
-                {t('settings.advanced.outboundModeRule')}
-              </TabsTrigger>
-              <TabsTrigger value="global" className="flex-1 text-xs">
-                {t('settings.advanced.outboundModeGlobal')}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        {/* Авто-обновление подписки */}
-        <div className="flex items-center justify-between px-2 py-1.5">
-          <span className="text-sm">{t('settings.advanced.subAutoUpdate')}</span>
-          <Switch
-            checked={subAutoUpdate}
-            disabled={!remoteItem}
-            onCheckedChange={(value) => onSubAutoUpdate(Boolean(value))}
-            className="scale-90"
-          />
-        </div>
-        {/* Профили правил: 1/2/3 + Изменить конфиг */}
-        <div className="flex flex-col gap-1 px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-          <span className="text-sm">{t('settings.advanced.profilesTitle')}</span>
-          <Tabs
-            value={activeSlot}
-            onValueChange={(v) => {
-              const id = SLOT_IDS[parseInt(v, 10) - 1]
-              if (id) {
-                changeCurrentProfile(id).catch((e) => toast.error(`${e}`))
-              }
-            }}
-          >
-            <TabsList className="w-full">
-              <TabsTrigger value="1" className="flex-1 text-xs">
-                1
-              </TabsTrigger>
-              <TabsTrigger value="2" className="flex-1 text-xs">
-                2
-              </TabsTrigger>
-              <TabsTrigger value="3" className="flex-1 text-xs">
-                3
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <DropdownMenuItem
-            disabled={editDisabled}
-            onSelect={(e) => {
-              e.preventDefault()
-              onEditConfig()
-            }}
-            className={editDisabled ? 'opacity-40' : ''}
-          >
-            <Pencil className="size-4" />
-            {t('settings.advanced.editConfig')}
-          </DropdownMenuItem>
-        </div>
-        <DropdownMenuSeparator />
         {/* Управление подпиской */}
         <DropdownMenuItem
-          disabled={!currentProfile || currentProfile.type !== 'remote' || updatingProfile}
+          disabled={!remoteItem || updatingProfile}
           onClick={updateCurrentProfile}
         >
           <RefreshCcw className={updatingProfile ? 'animate-spin' : undefined} />
           {t('profile.updateSubscription')}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          variant="destructive"
-          disabled={!currentProfile}
-          onClick={() => setConfirmDeleteOpen(true)}
-        >
+        <DropdownMenuItem variant="destructive" disabled={!remoteItem} onClick={() => setConfirmDeleteOpen(true)}>
           <Trash2 />
           {t('profile.delete')}
         </DropdownMenuItem>
@@ -294,6 +245,67 @@ const WindowControls: React.FC = () => {
             className="scale-90"
           />
         </div>
+        <DropdownMenuSeparator />
+        {/* Новые переключатели (внизу) */}
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <span className="text-sm">{t('settings.advanced.mainSwitch')}</span>
+          <Segmented
+            value={mainSwitchMode}
+            options={[
+              { value: 'tun', label: t('settings.advanced.mainSwitchTun') },
+              { value: 'sysproxy', label: t('settings.advanced.mainSwitchProxyMode') }
+            ]}
+            onChange={(v) => patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })}
+          />
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <span className="text-sm">{t('settings.advanced.outboundModeTitle')}</span>
+          <Segmented
+            value={mode}
+            options={[
+              { value: 'rule', label: t('settings.advanced.outboundModeRule') },
+              { value: 'global', label: t('settings.advanced.outboundModeGlobal') }
+            ]}
+            onChange={(v) => onModeChange(v as 'rule' | 'global')}
+          />
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <span className="text-sm">{t('settings.advanced.subAutoUpdate')}</span>
+          <Switch
+            checked={subAutoUpdate}
+            disabled={!remoteItem}
+            onCheckedChange={(value) => onSubAutoUpdate(Boolean(value))}
+            className="scale-90"
+          />
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <span className="text-sm">{t('settings.advanced.profilesTitle')}</span>
+          <Segmented
+            value={activeSlot}
+            options={[
+              { value: '1', label: '1' },
+              { value: '2', label: '2' },
+              { value: '3', label: '3' }
+            ]}
+            onChange={(v) => {
+              const id = SLOT_IDS[parseInt(v, 10) - 1]
+              if (id && id !== current) {
+                changeCurrentProfile(id).catch((e) => toast.error(`${e}`))
+              }
+            }}
+          />
+        </div>
+        <DropdownMenuItem
+          disabled={editDisabled}
+          onSelect={(e) => {
+            e.preventDefault()
+            onEditConfig()
+          }}
+          className={editDisabled ? 'opacity-40' : ''}
+        >
+          <Pencil className="size-4" />
+          {t('settings.advanced.editConfig')}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -319,10 +331,7 @@ const WindowControls: React.FC = () => {
     </button>
   )
 
-  // Order: settings, minimize, close (left to right)
-  const buttons = isMac
-    ? [settingsButton, closeBtn, minimizeBtn]
-    : [settingsButton, minimizeBtn, closeBtn]
+  const buttons = isMac ? [settingsButton, closeBtn, minimizeBtn] : [settingsButton, minimizeBtn, closeBtn]
 
   return (
     <>
@@ -339,7 +348,7 @@ const WindowControls: React.FC = () => {
             </AlertDialogMedia>
             <AlertDialogTitle>{t('profile.confirmDeleteProfile')}</AlertDialogTitle>
             <AlertDialogDescription className="truncate max-w-3xs">
-              {currentProfile?.name}
+              {remoteItem?.name}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
