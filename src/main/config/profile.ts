@@ -103,11 +103,15 @@ export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> 
   }
 }
 
-// Гарантирует наличие слотов 2/3 (локальные копии). Если файл слота пуст/отсутствует —
-// копирует содержимое файла подписки (слот 1). Иначе не трогает (сохраняет правки пользователя).
+// Гарантирует наличие слотов 2/3 (локальные копии), но только если уже есть подписка (слот 1).
+// Если файл слота пуст/отсутствует — копирует содержимое файла подписки. Иначе не трогает (сохраняет правки пользователя).
 export async function ensureCopySlots(): Promise<void> {
   const config = await getProfileConfig()
   if (!config.items) config.items = []
+  const hasSubscription = config.items.some(
+    (i) => i.id === SUBSCRIPTION_SLOT && i.type === 'remote'
+  )
+  if (!hasSubscription) return // нет подписки — не создаём слоты, сохраняем first-run empty state
   const subFile = profilePath(SUBSCRIPTION_SLOT)
   const hasSub = existsSync(subFile)
   for (const slotId of COPY_SLOTS) {
@@ -137,26 +141,26 @@ export async function ensureCopySlots(): Promise<void> {
 }
 
 // Миграция на модель 3 фиксированных слотов для существующих пользователей.
+// Если подписки ещё нет — ничего не делаем, сохраняем штатное first-run состояние.
 export async function migrateProfileSlots(): Promise<void> {
   const config = await getProfileConfig(true)
   if (!config.items) config.items = []
   const remotes = config.items.filter((i) => i.type === 'remote')
-  if (remotes.length > 0) {
-    const sub = remotes[0]
-    if (sub.id !== SUBSCRIPTION_SLOT) {
-      const oldFile = profilePath(sub.id)
-      const newFile = profilePath(SUBSCRIPTION_SLOT)
-      if (existsSync(oldFile) && !existsSync(newFile)) {
-        await rename(oldFile, newFile)
-      } else if (existsSync(oldFile) && existsSync(newFile)) {
-        await rm(oldFile)
-      }
-      sub.id = SUBSCRIPTION_SLOT
+  if (remotes.length === 0) return
+  const sub = remotes[0]
+  if (sub.id !== SUBSCRIPTION_SLOT) {
+    const oldFile = profilePath(sub.id)
+    const newFile = profilePath(SUBSCRIPTION_SLOT)
+    if (existsSync(oldFile) && !existsSync(newFile)) {
+      await rename(oldFile, newFile)
+    } else if (existsSync(oldFile) && existsSync(newFile)) {
+      await rm(oldFile)
     }
-    sub.locked = true
-    // Лишние remote (legacy) — оставляем только один (слот подписки)
-    config.items = config.items.filter((i) => i.type !== 'remote' || i.id === SUBSCRIPTION_SLOT)
+    sub.id = SUBSCRIPTION_SLOT
   }
+  sub.locked = true
+  // Лишние remote (legacy) — оставляем только один (слот подписки)
+  config.items = config.items.filter((i) => i.type !== 'remote' || i.id === SUBSCRIPTION_SLOT)
   await setProfileConfig(config)
   await ensureCopySlots()
   const cfg2 = await getProfileConfig()
