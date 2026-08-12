@@ -7,7 +7,6 @@ import ShortcutConfig from '@renderer/components/settings/shortcut-config'
 import AppearanceConfig from '@renderer/components/settings/appearance-confis'
 import LanguageConfig from '@renderer/components/settings/language-config'
 import ProxySwitches from '@renderer/components/settings/proxy-switches'
-import ProfileSwitches from '@renderer/components/settings/profile-switches'
 import { useTranslation } from 'react-i18next'
 import { Github } from 'lucide-react'
 import { useState } from 'react'
@@ -36,7 +35,6 @@ const Settings: React.FC = () => {
       }
     >
       <ProxySwitches />
-      <ProfileSwitches />
       <GeneralConfig showHiddenSettings={showHiddenSettings} />
       <LanguageConfig />
       <AppearanceConfig showHiddenSettings={showHiddenSettings} />
