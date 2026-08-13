@@ -30,13 +30,3 @@ function formatNumString(num: number): string {
   }
 }
 
-export function calcPercent(
-  upload: number | undefined,
-  download: number | undefined,
-  total: number | undefined
-): number {
-  if (upload === undefined || download === undefined || total === undefined) {
-    return 100
-  }
-  return Math.round(((upload + download) / total) * 100)
-}

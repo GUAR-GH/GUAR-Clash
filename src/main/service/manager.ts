@@ -71,10 +71,6 @@ function isUserCancelledError(error: unknown): boolean {
   )
 }
 
-export function exportPublicKey(): string {
-  return getPublicKey()
-}
-
 export function getAxios() {
   return getServiceAxios()
 }

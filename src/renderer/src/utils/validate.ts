@@ -112,28 +112,6 @@ export const isValidDomainWildcard = (s: string | undefined): ValidationResult =
   return { ok: false, error: t('common.invalidDomain') }
 }
 
-export const isValidPortRange = (s: string | undefined): boolean => {
-  if (!s || s.trim() === '') return false
-  const parts = s
-    .split(/[,/]/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-  if (parts.length === 0) return false
-  for (const p of parts) {
-    if (p.includes('-')) {
-      const [a, b] = p.split('-')
-      if (!/^\d+$/.test(a) || !/^\d+$/.test(b)) return false
-      const na = Number(a)
-      const nb = Number(b)
-      if (na < 1 || nb > 65535 || na > nb) return false
-    } else {
-      if (!/^\d+$/.test(p)) return false
-      const np = Number(p)
-      if (np < 1 || np > 65535) return false
-    }
-  }
-  return true
-}
 
 export const isValidDnsServer = (s: string | undefined, ipOnly = false): ValidationResult => {
   if (!s || s.trim() === '') return { ok: false, error: t('common.cannotBeEmpty') }

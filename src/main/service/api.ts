@@ -65,10 +65,6 @@ export const test = async (): Promise<Record<string, unknown>> => {
   return await instance.get('/test')
 }
 
-export const getCoreStatus = async (): Promise<Record<string, unknown>> => {
-  const instance = getServiceAxios()
-  return await instance.get('/core')
-}
 
 export const startCore = async (): Promise<Record<string, unknown>> => {
   const instance = getServiceAxios()
@@ -85,10 +81,6 @@ export const restartCore = async (): Promise<Record<string, unknown>> => {
   return await instance.post('/core/restart')
 }
 
-export const getProxyStatus = async (): Promise<Record<string, unknown>> => {
-  const instance = getServiceAxios()
-  return await instance.get('/sysproxy/status')
-}
 
 export const setPac = async (
   url: string,
