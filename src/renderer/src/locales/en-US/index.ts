@@ -547,8 +547,6 @@ export default {
       resetWarning: '⚠️ Delete configuration, ',
       cannotUndo: 'this action cannot be undone',
       confirmDelete: 'Confirm Delete',
-      openGuide: 'Open Guide',
-      openGuidePage: 'Open Guide Page',
       checkUpdate: 'Check for Updates',
       alreadyLatest: 'Already using latest version',
       noNeedUpdate: 'No update needed',

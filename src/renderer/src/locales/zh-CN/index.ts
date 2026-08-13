@@ -535,8 +535,6 @@ export default {
       resetWarning: '⚠️ 删除配置，',
       cannotUndo: '操作不可撤销',
       confirmDelete: '确认删除',
-      openGuide: '打开引导页面',
-      openGuidePage: '打开引导页面',
       checkUpdate: '检查更新',
       alreadyLatest: '当前已是最新版本',
       noNeedUpdate: '无需更新',

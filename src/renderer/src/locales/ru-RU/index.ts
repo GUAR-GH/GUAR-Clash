@@ -546,8 +546,6 @@ export default {
       resetWarning: '⚠️ Удалить конфигурацию, ',
       cannotUndo: 'это действие нельзя отменить',
       confirmDelete: 'Подтвердить удаление',
-      openGuide: 'Открыть руководство',
-      openGuidePage: 'Открыть страницу руководства',
       checkUpdate: 'Проверить обновления',
       alreadyLatest: 'Уже используется последняя версия',
       noNeedUpdate: 'Обновление не требуется',

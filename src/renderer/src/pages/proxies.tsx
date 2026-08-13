@@ -256,8 +256,6 @@ const Proxies: React.FC = () => {
           className={`w-full ${!isOpen[index] ? 'pb-2' : ''} px-2`}
         >
           <Card
-            data-guide={index === 0 ? 'proxies-first-group' : undefined}
-            data-guide-open={index === 0 ? `${isOpen[index]}` : undefined}
             className="w-full backdrop-blur-3xl cursor-pointer py-0 transition-all duration-200 hover:bg-accent/50 hover:shadow-sm"
             role="button"
             tabIndex={0}
@@ -365,7 +363,6 @@ const Proxies: React.FC = () => {
       })
       return allProxies[groupIndex] ? (
         <div
-          data-guide={groupIndex === 0 ? 'proxies-first-group-row' : undefined}
           style={
             proxyCols !== 'auto'
               ? { gridTemplateColumns: `repeat(${proxyCols}, minmax(0, 1fr))` }
@@ -424,7 +421,6 @@ const Proxies: React.FC = () => {
           {currentProfile?.announce && (
             <div className="px-2 pt-2 pb-1">
               <div
-                data-guide="proxies-profile-announce"
                 className="max-h-20 overflow-y-auto rounded-md border border-stroke/65 bg-card/35 px-3 py-2 text-center text-xs font-medium leading-snug whitespace-pre-line text-muted-foreground"
               >
                 {currentProfile.announce}

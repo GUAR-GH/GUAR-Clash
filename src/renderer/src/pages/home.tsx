@@ -249,7 +249,6 @@ const Home: React.FC = () => {
           {currentProfile && (
             <div className="px-0.5 pt-3">
               <div
-                data-guide="home-profile-header"
                 className="flex min-w-0 items-center justify-center gap-3"
               >
                 {currentProfile.logo && (
@@ -268,7 +267,6 @@ const Home: React.FC = () => {
                   </div>
                   {supportHref && (
                     <button
-                      data-guide="home-support-link"
                       type="button"
                       onClick={() => open(supportHref)}
                       className="mt-1 text-[11px] font-medium text-muted-foreground/80 transition-colors hover:text-foreground/90"
@@ -315,7 +313,6 @@ const Home: React.FC = () => {
             <button
               disabled={isDisabled}
               onClick={() => onValueChange(!isSelected)}
-              data-guide="home-power-toggle"
               className="relative group transition-transform active:scale-95 cursor-pointer"
             >
               <div
@@ -389,7 +386,6 @@ const Home: React.FC = () => {
             {firstGroup && (
               <div className="border-t border-stroke/65 pt-2">
                 <button
-                  data-guide="home-group-selector"
                   type="button"
                   className="flex w-full items-center justify-center gap-2 py-2 text-center transition-colors hover:text-foreground/90"
                   onClick={() => navigate('/proxies', { state: { fromHome: true } })}

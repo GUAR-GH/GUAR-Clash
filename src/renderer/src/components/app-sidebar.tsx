@@ -53,7 +53,6 @@ const AppSidebar: React.FC = () => {
 
   return (
     <Sidebar
-      data-guide="app-sidebar"
       collapsible="icon"
       side="left"
       variant="floating"
@@ -86,7 +85,6 @@ const AppSidebar: React.FC = () => {
                       className="cursor-pointer"
                       tooltip={t(item.i18nKey)}
                       isActive={isActive}
-                      data-guide={item.key === 'main' ? 'sidebar-home-button' : undefined}
                       onClick={() => navigate(item.path)}
                       onDoubleClick={
                         item.key === 'profile' ? () => setShowRuntimeConfig(true) : undefined
