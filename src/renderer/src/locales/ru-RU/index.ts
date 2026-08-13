@@ -502,7 +502,7 @@ export default {
       outboundModeTitle: 'Режим',
       outboundModeRule: 'Правила',
       outboundModeGlobal: 'Глобальный',
-      subAutoUpdate: 'Авто-обновление подписки',
+      subAutoUpdate: 'Авто-обновление',
       profilesTitle: 'Выбор профиля:',
       editConfig: 'Изменить конф',
       groupSubscription: 'Подписка',

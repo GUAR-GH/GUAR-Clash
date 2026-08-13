@@ -32,7 +32,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle
 } from '@renderer/components/ui/alert-dialog'
-import { Settings, RefreshCcw, Trash2, Moon, Pencil, Network, Route, Layers, Power } from 'lucide-react'
+import { Settings, RefreshCcw, Trash2, Moon, Pencil, Network, Route, Layers, Power, CalendarClock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 
@@ -49,8 +49,9 @@ const Segmented: React.FC<{
   value: string
   options: SegOption[]
   onChange: (v: string) => void
-}> = ({ value, options, onChange }) => (
-  <div className="flex gap-0.5 rounded-md bg-accent/40 p-0.5">
+  block?: boolean
+}> = ({ value, options, onChange, block }) => (
+  <div className={`flex gap-0.5 rounded-lg bg-accent/40 p-0.5 ${block ? 'w-full' : ''}`}>
     {options.map((o) => (
       <button
         key={o.value}
@@ -59,7 +60,7 @@ const Segmented: React.FC<{
           e.stopPropagation()
           if (o.value !== value) onChange(o.value)
         }}
-        className={`h-6 min-w-6 px-2 text-xs rounded-[5px] transition-colors ${
+        className={`h-6 px-2 text-xs rounded-[7px] transition-colors ${block ? 'flex-1' : 'min-w-6'} ${
           value === o.value
             ? 'bg-foreground/90 text-background font-medium'
             : 'text-muted-foreground hover:text-foreground'
@@ -214,6 +215,16 @@ const WindowControls: React.FC = () => {
     </div>
   )
 
+  const SegmentedRow: React.FC<{ icon: React.ReactNode; children: React.ReactNode }> = ({
+    icon,
+    children
+  }) => (
+    <div className="flex items-center gap-2 px-2 py-1">
+      {icon}
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  )
+
   const settingsButton = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -221,12 +232,20 @@ const WindowControls: React.FC = () => {
           <Settings className="size-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="bottom" className="w-64 p-1.5">
+      <DropdownMenuContent align="center" side="bottom" className="settings-dropdown-content w-60 p-1.5">
         <GroupLabel>{t('settings.advanced.groupSubscription')}</GroupLabel>
         <DropdownMenuItem disabled={!remoteItem || updatingProfile} onClick={updateCurrentProfile}>
           <RefreshCcw className={updatingProfile ? 'animate-spin' : undefined} />
           {t('profile.updateSubscription')}
         </DropdownMenuItem>
+        <Row icon={<CalendarClock className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.subAutoUpdate')}>
+          <Switch
+            checked={subAutoUpdate}
+            disabled={!remoteItem}
+            onCheckedChange={(value) => onSubAutoUpdate(Boolean(value))}
+            className="scale-90"
+          />
+        </Row>
         <DropdownMenuItem
           variant="destructive"
           disabled={!remoteItem}
@@ -258,8 +277,9 @@ const WindowControls: React.FC = () => {
         </Row>
 
         <GroupLabel>{t('settings.advanced.groupMode')}</GroupLabel>
-        <Row icon={<Network className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.mainSwitch')}>
+        <SegmentedRow icon={<Network className="size-3.5 shrink-0 text-muted-foreground" />}>
           <Segmented
+            block
             value={mainSwitchMode}
             options={[
               { value: 'tun', label: t('settings.advanced.mainSwitchTunShort') },
@@ -267,9 +287,10 @@ const WindowControls: React.FC = () => {
             ]}
             onChange={(v) => patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })}
           />
-        </Row>
-        <Row icon={<Route className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.outboundModeTitle')}>
+        </SegmentedRow>
+        <SegmentedRow icon={<Route className="size-3.5 shrink-0 text-muted-foreground" />}>
           <Segmented
+            block
             value={mode}
             options={[
               { value: 'rule', label: t('settings.advanced.outboundModeRule') },
@@ -277,19 +298,12 @@ const WindowControls: React.FC = () => {
             ]}
             onChange={(v) => onModeChange(v as 'rule' | 'global')}
           />
-        </Row>
-        <Row icon={<RefreshCcw className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.subAutoUpdate')}>
-          <Switch
-            checked={subAutoUpdate}
-            disabled={!remoteItem}
-            onCheckedChange={(value) => onSubAutoUpdate(Boolean(value))}
-            className="scale-90"
-          />
-        </Row>
+        </SegmentedRow>
 
         <GroupLabel>{t('settings.advanced.groupProfile')}</GroupLabel>
-        <Row icon={<Layers className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.profilesTitle')}>
+        <SegmentedRow icon={<Layers className="size-3.5 shrink-0 text-muted-foreground" />}>
           <Segmented
+            block
             value={activeSlot}
             options={[
               { value: '1', label: '1' },
@@ -303,7 +317,7 @@ const WindowControls: React.FC = () => {
               }
             }}
           />
-        </Row>
+        </SegmentedRow>
         <DropdownMenuItem
           disabled={editDisabled}
           onSelect={(e) => {

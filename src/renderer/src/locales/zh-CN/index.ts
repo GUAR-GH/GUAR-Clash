@@ -567,7 +567,7 @@ export default {
       outboundModeTitle: '路由',
       outboundModeRule: '规则',
       outboundModeGlobal: '全局',
-      subAutoUpdate: '自动更新订阅',
+      subAutoUpdate: '自动更新',
       profilesTitle: '配置:',
       editConfig: '编辑配置',
       groupSubscription: '订阅',

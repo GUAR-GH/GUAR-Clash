@@ -503,7 +503,7 @@ export default {
       outboundModeTitle: 'Routing',
       outboundModeRule: 'Rules',
       outboundModeGlobal: 'Global',
-      subAutoUpdate: 'Auto-update subscription',
+      subAutoUpdate: 'Auto-update',
       profilesTitle: 'profile:',
       editConfig: 'Edit config',
       groupSubscription: 'Subscription',

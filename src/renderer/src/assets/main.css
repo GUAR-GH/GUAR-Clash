@@ -536,6 +536,18 @@
   border-bottom-color: color-mix(in oklab, var(--stroke-power-on) 65%, transparent);
 }
 
+/* Settings dropdown: pinned to top-center of the window (above the start button),
+   instead of anchored to the gear at the top-right corner.
+   Target the Radix Popper WRAPPER (it holds the inline left/top/transform from
+   Floating UI; the inner content can't be fixed-centered because the wrapper's
+   transform creates a new containing block). */
+[data-radix-popper-content-wrapper]:has(.settings-dropdown-content) {
+  position: fixed !important;
+  left: 50% !important;
+  top: 46px !important;
+  transform: translateX(-50%) !important;
+}
+
 * {
   user-select: none;
 }
