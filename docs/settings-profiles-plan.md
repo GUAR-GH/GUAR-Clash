@@ -121,7 +121,7 @@ UI (компактно, мало места):
 **Файлы:** `src/renderer/src/locales/{ru-RU,en-US,zh-CN}/index.ts` (или соответствующие namespace).
 
 Добавить ключи:
-- `settings.modeTitle` — «Режим прокси» / «Proxy mode» / «代理模式»
+- `settings.modeTitle` — «Режим прокси» / «System Proxy» / «代理模式»
 - `settings.modeRule` / `settings.modeGlobal` — «Правила» / «Глобальный»
 - `settings.subAutoUpdate` — «Авто-обновление подписки» / «Auto-update subscription» / «自动更新订阅»
 - `settings.profileTitle` — «профиль:» (оставить как в ТЗ)

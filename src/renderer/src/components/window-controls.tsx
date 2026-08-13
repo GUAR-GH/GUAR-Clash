@@ -18,7 +18,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@renderer/components/ui/dropdown-menu'
 import { Switch } from '@renderer/components/ui/switch'
@@ -200,11 +199,17 @@ const WindowControls: React.FC = () => {
     label,
     children
   }) => (
-    <div className="flex items-center justify-between px-2 py-1">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between gap-2 px-2 py-1">
+      <div className="flex min-w-0 items-center gap-2">
         {icon}
-        <span className="text-sm">{label}</span>
+        <span className="truncate text-sm">{label}</span>
       </div>
+      {children}
+    </div>
+  )
+
+  const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="px-2 pt-1.5 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
       {children}
     </div>
   )
@@ -216,19 +221,23 @@ const WindowControls: React.FC = () => {
           <Settings className="size-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="bottom" className="w-72 p-1">
-        {/* Подписка */}
+      <DropdownMenuContent align="center" side="bottom" className="w-64 p-1.5">
+        <GroupLabel>{t('settings.advanced.groupSubscription')}</GroupLabel>
         <DropdownMenuItem disabled={!remoteItem || updatingProfile} onClick={updateCurrentProfile}>
           <RefreshCcw className={updatingProfile ? 'animate-spin' : undefined} />
           {t('profile.updateSubscription')}
         </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" disabled={!remoteItem} onClick={() => setConfirmDeleteOpen(true)}>
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={!remoteItem}
+          onClick={() => setConfirmDeleteOpen(true)}
+        >
           <Trash2 />
           {t('profile.delete')}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {/* Оформление */}
-        <Row icon={<Moon className="size-3.5 text-muted-foreground" />} label={t('settings.appearance.dark')}>
+
+        <GroupLabel>{t('settings.advanced.groupAppearance')}</GroupLabel>
+        <Row icon={<Moon className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.appearance.dark')}>
           <Switch
             checked={isDark}
             onCheckedChange={(value) => {
@@ -240,38 +249,36 @@ const WindowControls: React.FC = () => {
             className="scale-90"
           />
         </Row>
-        <DropdownMenuSeparator />
-        {/* Автозапуск */}
-        <Row icon={<Power className="size-3.5 text-muted-foreground" />} label={t('settings.general.autoStart')}>
+        <Row icon={<Power className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.general.autoStart')}>
           <Switch
             checked={autoRunEnabled ?? false}
             onCheckedChange={(value) => toggleAutoRun(Boolean(value))}
             className="scale-90"
           />
         </Row>
-        <DropdownMenuSeparator />
-        {/* Режим и профили */}
-        <Row icon={<Network className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.mainSwitch')}>
+
+        <GroupLabel>{t('settings.advanced.groupMode')}</GroupLabel>
+        <Row icon={<Network className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.mainSwitch')}>
           <Segmented
             value={mainSwitchMode}
             options={[
-              { value: 'tun', label: t('settings.advanced.mainSwitchTun') },
-              { value: 'sysproxy', label: t('settings.advanced.mainSwitchProxyMode') }
+              { value: 'tun', label: t('settings.advanced.mainSwitchTunShort') },
+              { value: 'sysproxy', label: t('settings.advanced.mainSwitchProxyShort') }
             ]}
             onChange={(v) => patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })}
           />
         </Row>
-        <Row icon={<Route className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.outboundModeTitle')}>
+        <Row icon={<Route className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.outboundModeTitle')}>
           <Segmented
             value={mode}
             options={[
               { value: 'rule', label: t('settings.advanced.outboundModeRule') },
-              { value: 'global', label: t('settings.advanced.outboundModeGlobal') }
+              { value: 'global', label: t('settings.advanced.outboundModeGlobalShort') }
             ]}
             onChange={(v) => onModeChange(v as 'rule' | 'global')}
           />
         </Row>
-        <Row icon={<RefreshCcw className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.subAutoUpdate')}>
+        <Row icon={<RefreshCcw className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.subAutoUpdate')}>
           <Switch
             checked={subAutoUpdate}
             disabled={!remoteItem}
@@ -279,7 +286,9 @@ const WindowControls: React.FC = () => {
             className="scale-90"
           />
         </Row>
-        <Row icon={<Layers className="size-3.5 text-muted-foreground" />} label={t('settings.advanced.profilesTitle')}>
+
+        <GroupLabel>{t('settings.advanced.groupProfile')}</GroupLabel>
+        <Row icon={<Layers className="size-3.5 shrink-0 text-muted-foreground" />} label={t('settings.advanced.profilesTitle')}>
           <Segmented
             value={activeSlot}
             options={[
