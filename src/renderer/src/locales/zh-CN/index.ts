@@ -511,7 +511,12 @@ export default {
         '启用后切换或保存订阅时通过 API 热重载配置而无需重启内核，禁用时仍使用重启方式切换',
       disconnectDetectInterval: '断网检测间隔',
       bypassDetectInterfaces: '绕过检测的接口',
-      directOnSpecificWifi: '在特定的 WiFi SSID 下直连'
+      directOnSpecificWifi: '在特定的 WiFi SSID 下直连',
+      turnOffTunFirst: '请先关闭隧道',
+      turnOffProxyFirst: '请先关闭代理',
+      brokenConfigBlockStart: '配置损坏 — 启动前请先修复',
+      restartTunnelToApply: '已选择配置。重启隧道以应用?',
+      restartNow: '重启'
     },
     shortcuts: {
       title: '快捷键设置',
@@ -901,6 +906,12 @@ export default {
     yamlParseFailed: 'YAML 解析失败：',
     pacEditorTitle: '编辑 PAC 脚本',
     bypassEditorTitle: '编辑绕过列表 (YAML)'
+  },
+
+  guarVpn: {
+    title: 'GUAR VPN',
+    site: '网站',
+    bot: '机器人'
   },
 
   notifications: {

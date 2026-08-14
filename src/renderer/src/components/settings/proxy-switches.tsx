@@ -4,10 +4,10 @@ import SettingCard from '../base/base-setting-card'
 import SettingItem from '../base/base-setting-item'
 import { Button } from '@renderer/components/ui/button'
 import { Switch } from '@renderer/components/ui/switch'
-import { Tabs, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
-import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
+import { useProfileConfig } from '@renderer/hooks/use-profile-config'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig, validateProfile } from '@renderer/utils/ipc'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Settings } from 'lucide-react'
@@ -18,11 +18,11 @@ const ProxySwitches: React.FC = () => {
   const { controledMihomoConfig, patchControledMihomoConfig } = useControledMihomoConfig()
   const { tun } = controledMihomoConfig || {}
   const { appConfig, patchAppConfig } = useAppConfig()
+  const { profileConfig } = useProfileConfig()
   const {
     sysProxy,
     proxyMode = false,
-    onlyActiveDevice = false,
-    mainSwitchMode = 'tun'
+    onlyActiveDevice = false
   } = appConfig || {}
   const { enable: writeSysProxy = true, mode } = sysProxy || {}
   const { 'mixed-port': mixedPort } = controledMihomoConfig || {}
@@ -30,19 +30,6 @@ const ProxySwitches: React.FC = () => {
 
   return (
     <SettingCard>
-      <SettingItem title={t('settings.advanced.mainSwitch')} divider>
-        <Tabs
-          value={mainSwitchMode}
-          onValueChange={(value) => {
-            patchAppConfig({ mainSwitchMode: value as 'tun' | 'sysproxy' })
-          }}
-        >
-          <TabsList>
-            <TabsTrigger value="tun">{t('settings.advanced.mainSwitchTun')}</TabsTrigger>
-            <TabsTrigger value="sysproxy">{t('settings.advanced.mainSwitchProxyMode')}</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </SettingItem>
       <SettingItem
         title={t('sider.virtualInterface')}
         actions={
@@ -58,8 +45,15 @@ const ProxySwitches: React.FC = () => {
       >
         <Switch
           checked={tun?.enable}
+          disabled={proxyMode && !(tun?.enable ?? false)}
           onCheckedChange={async (enable: boolean) => {
             if (enable) {
+              const v = await validateProfile(profileConfig?.current)
+              if (!v.ok) {
+                toast.error(`${t('settings.advanced.brokenConfigBlockStart')}${v.error ? `: ${v.error}` : ''}`)
+                return
+              }
+              await patchAppConfig({ mainSwitchMode: 'tun' })
               await patchControledMihomoConfig({ tun: { enable }, dns: { enable: true } })
             } else {
               await patchControledMihomoConfig({ tun: { enable } })
@@ -84,12 +78,20 @@ const ProxySwitches: React.FC = () => {
       >
         <Switch
           checked={proxyMode}
-          disabled={writeSysProxy && mode == 'manual' && sysProxyDisabled}
+          disabled={
+            (writeSysProxy && mode == 'manual' && sysProxyDisabled) ||
+            ((tun?.enable ?? false) && !proxyMode)
+          }
           onCheckedChange={async (enable: boolean) => {
             if (enable && writeSysProxy && mode == 'manual' && sysProxyDisabled) return
             try {
               if (enable) {
-                await patchAppConfig({ proxyMode: true })
+                const v = await validateProfile(profileConfig?.current)
+                if (!v.ok) {
+                  toast.error(`${t('settings.advanced.brokenConfigBlockStart')}${v.error ? `: ${v.error}` : ''}`)
+                  return
+                }
+                await patchAppConfig({ proxyMode: true, mainSwitchMode: 'sysproxy' })
                 await mihomoHotReloadConfig()
                 if (writeSysProxy) {
                   await triggerSysProxy(true, onlyActiveDevice)

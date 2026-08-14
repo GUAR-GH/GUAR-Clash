@@ -10,8 +10,10 @@ import {
   enableAutoRun,
   patchMihomoConfig,
   mihomoCloseAllConnections,
-  openFile,
-  setNativeTheme
+  openConfigEditor,
+  restartCore,
+  setNativeTheme,
+  validateProfile
 } from '@renderer/utils/ipc'
 import useSWR from 'swr'
 import {
@@ -32,7 +34,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle
 } from '@renderer/components/ui/alert-dialog'
-import { Settings, RefreshCcw, Trash2, Moon, Pencil, Network, Route, Layers, Power, CalendarClock } from 'lucide-react'
+import { Settings, RefreshCcw, Trash2, Moon, Pencil, Network, Route, Layers, Power, CalendarClock, Globe, Send } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 
@@ -50,8 +52,13 @@ const Segmented: React.FC<{
   options: SegOption[]
   onChange: (v: string) => void
   block?: boolean
-}> = ({ value, options, onChange, block }) => (
-  <div className={`flex gap-0.5 rounded-lg bg-accent/40 p-0.5 ${block ? 'w-full' : ''}`}>
+  disabled?: boolean
+}> = ({ value, options, onChange, block, disabled }) => (
+  <div
+    className={`flex gap-0.5 rounded-lg bg-accent/40 p-0.5 ${block ? 'w-full' : ''} ${
+      disabled ? 'opacity-40' : ''
+    }`}
+  >
     {options.map((o) => (
       <button
         key={o.value}
@@ -61,6 +68,8 @@ const Segmented: React.FC<{
           if (o.value !== value) onChange(o.value)
         }}
         className={`h-6 px-2 text-xs rounded-[7px] transition-colors ${block ? 'flex-1' : 'min-w-6'} ${
+          disabled ? 'cursor-not-allowed' : ''
+        } ${
           value === o.value
             ? 'bg-foreground/90 text-background font-medium'
             : 'text-muted-foreground hover:text-foreground'
@@ -81,15 +90,29 @@ const WindowControls: React.FC = () => {
     useWindowFrame = false,
     appTheme = 'system',
     mainSwitchMode = 'tun',
-    autoCloseConnection = true
+    autoCloseConnection = true,
+    proxyMode = false
   } = appConfig || {}
+  // Пока активен TUN или системный прокси — настройки менять нельзя; выключение
+  // только через главную кнопку на home. При попытке смены — тост turnOffTunFirst.
+  const tunActive = (controledMihomoConfig?.tun?.enable ?? false) || proxyMode
+  // Тост при попытке сменить заблокированные настройки: зависит от того, что активно.
+  const turnOffMsg = (controledMihomoConfig?.tun?.enable ?? false)
+    ? t('settings.advanced.turnOffTunFirst')
+    : t('settings.advanced.turnOffProxyFirst')
   const { setTheme, resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark' || appTheme === 'dark'
   const [isFocused, setIsFocused] = useState(document.hasFocus())
   const isMac = platform === 'darwin'
 
-  const { profileConfig, addProfileItem, removeProfileItem, changeCurrentProfile, updateProfileItem } =
-    useProfileConfig()
+  const {
+    profileConfig,
+    addProfileItem,
+    removeProfileItem,
+    changeCurrentProfile,
+    setCurrentProfile,
+    updateProfileItem
+  } = useProfileConfig()
   const remoteItem = profileConfig?.items?.find((i) => i.type === 'remote')
   const subAutoUpdate = remoteItem?.autoUpdate ?? false
   const current = profileConfig?.current
@@ -151,6 +174,10 @@ const WindowControls: React.FC = () => {
   }
 
   const onModeChange = async (m: 'rule' | 'global'): Promise<void> => {
+    if (tunActive) {
+      toast.warning(turnOffMsg)
+      return
+    }
     try {
       await patchControledMihomoConfig({ mode: m })
       await patchMihomoConfig({ mode: m })
@@ -160,6 +187,29 @@ const WindowControls: React.FC = () => {
       window.electron.ipcRenderer.send('updateTrayMenu')
     } catch (e) {
       toast.error(`${e}`)
+    }
+  }
+
+  const onSelectProfile = async (id: string): Promise<void> => {
+    if (id === current) return
+    const res = await validateProfile(id)
+    if (!res.ok) {
+      await setCurrentProfile(id)
+      toast.error(res.error || t('settings.advanced.brokenConfigBlockStart'))
+      return
+    }
+    if (tunActive) {
+      await setCurrentProfile(id)
+      toast.warning(t('settings.advanced.restartTunnelToApply'), {
+        action: {
+          label: t('settings.advanced.restartNow'),
+          onClick: () => {
+            restartCore().catch((e) => toast.error(`${e}`))
+          }
+        }
+      })
+    } else {
+      changeCurrentProfile(id).catch((e) => toast.error(`${e}`))
     }
   }
 
@@ -180,7 +230,7 @@ const WindowControls: React.FC = () => {
   const onEditConfig = async (): Promise<void> => {
     if (editDisabled || !current) return
     try {
-      await openFile(current)
+      await openConfigEditor(current)
     } catch (e) {
       toast.error(`${e}`)
     }
@@ -210,7 +260,7 @@ const WindowControls: React.FC = () => {
   )
 
   const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="px-2 pt-1.5 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+    <div className="px-2 pt-1 pb-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
       {children}
     </div>
   )
@@ -232,7 +282,7 @@ const WindowControls: React.FC = () => {
           <Settings className="size-4" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="bottom" className="settings-dropdown-content w-60 p-1.5">
+      <DropdownMenuContent align="center" side="bottom" className="settings-dropdown-content w-60 p-1">
         <GroupLabel>{t('settings.advanced.groupSubscription')}</GroupLabel>
         <DropdownMenuItem disabled={!remoteItem || updatingProfile} onClick={updateCurrentProfile}>
           <RefreshCcw className={updatingProfile ? 'animate-spin' : undefined} />
@@ -280,17 +330,25 @@ const WindowControls: React.FC = () => {
         <SegmentedRow icon={<Network className="size-3.5 shrink-0 text-muted-foreground" />}>
           <Segmented
             block
+            disabled={tunActive}
             value={mainSwitchMode}
             options={[
               { value: 'tun', label: t('settings.advanced.mainSwitchTunShort') },
               { value: 'sysproxy', label: t('settings.advanced.mainSwitchProxyShort') }
             ]}
-            onChange={(v) => patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })}
+            onChange={(v) => {
+              if (tunActive) {
+                toast.warning(turnOffMsg)
+                return
+              }
+              patchAppConfig({ mainSwitchMode: v as 'tun' | 'sysproxy' })
+            }}
           />
         </SegmentedRow>
         <SegmentedRow icon={<Route className="size-3.5 shrink-0 text-muted-foreground" />}>
           <Segmented
             block
+            disabled={tunActive}
             value={mode}
             options={[
               { value: 'rule', label: t('settings.advanced.outboundModeRule') },
@@ -312,8 +370,8 @@ const WindowControls: React.FC = () => {
             ]}
             onChange={(v) => {
               const id = SLOT_IDS[parseInt(v, 10) - 1]
-              if (id && id !== current) {
-                changeCurrentProfile(id).catch((e) => toast.error(`${e}`))
+              if (id) {
+                onSelectProfile(id)
               }
             }}
           />
@@ -329,6 +387,26 @@ const WindowControls: React.FC = () => {
           <Pencil className="size-4" />
           {t('settings.advanced.editConfig')}
         </DropdownMenuItem>
+
+        <div className="px-2 pt-1 pb-0.5 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+          {t('guarVpn.title')}
+        </div>
+        <div className="flex gap-1 px-1.5 pb-1">
+          <DropdownMenuItem
+            className="flex-1 justify-center"
+            onSelect={() => window.open('https://get.guar.one/?campaign=GUAR_Clash')}
+          >
+            <Globe className="size-4" />
+            {t('guarVpn.site')}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="flex-1 justify-center"
+            onSelect={() => window.open('https://t.me/GUAR_ProtectionBot?start=GUAR_Clash')}
+          >
+            <Send className="size-4" />
+            {t('guarVpn.bot')}
+          </DropdownMenuItem>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

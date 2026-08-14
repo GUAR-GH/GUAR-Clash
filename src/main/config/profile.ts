@@ -63,6 +63,39 @@ export async function changeCurrentProfile(id: string): Promise<void> {
   }
 }
 
+export async function setCurrentProfile(id: string): Promise<void> {
+  const config = await getProfileConfig()
+  config.current = id
+  await setProfileConfig(config)
+}
+
+export async function validateProfile(
+  id: string | undefined
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await getProfileStr(id)
+    const parsed = parseYaml(data)
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return { ok: false, error: t('error.subscriptionFormatError') }
+    }
+    const hasContent =
+      'proxies' in parsed ||
+      'proxy-providers' in parsed ||
+      'proxy-groups' in parsed ||
+      'rules' in parsed ||
+      'rule-providers' in parsed ||
+      'dns' in parsed ||
+      'tun' in parsed ||
+      'mixed-port' in parsed
+    if (!hasContent) {
+      return { ok: false, error: t('error.subscriptionFormatError') }
+    }
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) }
+  }
+}
+
 export async function updateProfileItem(item: ProfileItem): Promise<void> {
   const config = await getProfileConfig()
   const index = (config.items ?? []).findIndex((i) => i.id === item.id)

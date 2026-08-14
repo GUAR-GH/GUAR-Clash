@@ -29,7 +29,8 @@ export default defineConfig({
         input: {
           index: resolve('src/renderer/index.html'),
           floating: resolve('src/renderer/floating.html'),
-          traymenu: resolve('src/renderer/traymenu.html')
+          traymenu: resolve('src/renderer/traymenu.html'),
+          configEditor: resolve('src/renderer/config-editor.html')
         }
       }
     },

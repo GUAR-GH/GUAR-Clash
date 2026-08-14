@@ -34,6 +34,8 @@ import {
   addProfileItem,
   removeProfileItem,
   changeCurrentProfile,
+  setCurrentProfile,
+  validateProfile,
   getProfileStr,
   getFileStr,
   setFileStr,
@@ -44,6 +46,7 @@ import {
   setProfileConfig,
   convertMrsRuleset
 } from '../config'
+import { openConfigEditor } from '../resolve/config-editor-window'
 import {
   manualGrantCorePermition,
   quitWithoutCore,
@@ -194,6 +197,8 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('setProfileStr', (_e, id, str) => ipcErrorWrapper(setProfileStr)(id, str))
   ipcMain.handle('updateProfileItem', (_e, item) => ipcErrorWrapper(updateProfileItem)(item))
   ipcMain.handle('changeCurrentProfile', (_e, id) => ipcErrorWrapper(changeCurrentProfile)(id))
+  ipcMain.handle('setCurrentProfile', (_e, id) => ipcErrorWrapper(setCurrentProfile)(id))
+  ipcMain.handle('validateProfile', (_e, id) => validateProfile(id))
   ipcMain.handle('addProfileItem', (_e, item) => ipcErrorWrapper(addProfileItem)(item))
   ipcMain.handle('removeProfileItem', (_e, id) => ipcErrorWrapper(removeProfileItem)(id))
   ipcMain.handle('restartCore', ipcErrorWrapper(restartCore))
@@ -260,6 +265,7 @@ export function registerIpcMainHandlers(): void {
   ipcMain.handle('closeFloatingWindow', () => ipcErrorWrapper(closeFloatingWindow)())
   ipcMain.handle('showContextMenu', () => ipcErrorWrapper(showContextMenu)())
   ipcMain.handle('openFile', (_e, id) => openFile(id))
+  ipcMain.handle('openConfigEditor', (_e, id) => openConfigEditor(id))
   ipcMain.handle('openDevTools', () => {
     mainWindow?.webContents.openDevTools()
   })

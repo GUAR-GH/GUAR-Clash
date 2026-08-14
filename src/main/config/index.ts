@@ -17,6 +17,8 @@ export {
   getProfileParseStr,
   setProfileStr,
   changeCurrentProfile,
+  setCurrentProfile,
+  validateProfile,
   updateProfileItem,
   convertMrsRuleset,
   migrateProfileSlots

@@ -4,7 +4,7 @@ import { useAppConfig } from '@renderer/hooks/use-app-config'
 import { useControledMihomoConfig } from '@renderer/hooks/use-controled-mihomo-config'
 import { useProfileConfig } from '@renderer/hooks/use-profile-config'
 import { useGroups } from '@renderer/hooks/use-groups'
-import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig } from '@renderer/utils/ipc'
+import { triggerSysProxy, updateTrayIcon, mihomoHotReloadConfig, validateProfile } from '@renderer/utils/ipc'
 import { Button } from '@renderer/components/ui/button'
 import NumberFlow from '@number-flow/react'
 import { useTranslation } from 'react-i18next'
@@ -168,6 +168,11 @@ const Home: React.FC = () => {
     setLoadingDirection(enable ? 'connecting' : 'disconnecting')
     try {
       if (enable) {
+        const v = await validateProfile(profileConfig?.current)
+        if (!v.ok) {
+          toast.error(`${t('settings.advanced.brokenConfigBlockStart')}${v.error ? `: ${v.error}` : ''}`)
+          return
+        }
         if (mainSwitchMode === 'tun') {
           await patchControledMihomoConfig({ tun: { enable: true }, dns: { enable: true } })
           await mihomoHotReloadConfig()

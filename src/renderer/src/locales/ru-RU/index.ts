@@ -504,14 +504,14 @@ export default {
       outboundModeGlobal: 'Глобальный',
       subAutoUpdate: 'Авто-обновление',
       profilesTitle: 'Выбор профиля:',
-      editConfig: 'Изменить конф',
+      editConfig: 'Изменить конфиг',
       groupSubscription: 'Подписка',
       groupAppearance: 'Оформление',
       groupMode: 'Режим',
       groupProfile: 'Профиль',
       mainSwitchTunShort: 'TUN',
       mainSwitchProxyShort: 'Прокси',
-      outboundModeGlobalShort: 'Глобал',
+      outboundModeGlobalShort: 'Глобальный',
       takeOverDNS: 'Управлять настройками DNS',
       takeOverSniffer: 'Управлять настройками определения доменов',
       stopCoreOnDisconnect: 'Останавливать ядро при потере сети',
@@ -522,7 +522,12 @@ export default {
         'Если включено, при смене или сохранении профиля конфигурация обновляется через API без перезапуска ядра. Иначе ядро перезапускается.',
       disconnectDetectInterval: 'Интервал проверки соединения',
       bypassDetectInterfaces: 'Исключить интерфейсы из проверки',
-      directOnSpecificWifi: 'Включать прямой режим для указанных Wi-Fi SSID'
+      directOnSpecificWifi: 'Включать прямой режим для указанных Wi-Fi SSID',
+      turnOffTunFirst: 'Сначала выключите туннель',
+      turnOffProxyFirst: 'Сначала выключите прокси',
+      brokenConfigBlockStart: 'Конфиг сломан — почините перед запуском',
+      restartTunnelToApply: 'Профиль выбран. Перезапустить туннель, чтобы применить?',
+      restartNow: 'Перезапустить'
     },
     shortcuts: {
       title: 'Настройки горячих клавиш',
@@ -920,6 +925,12 @@ export default {
     yamlParseFailed: 'Ошибка разбора YAML: ',
     pacEditorTitle: 'Редактировать PAC-скрипт',
     bypassEditorTitle: 'Редактировать список исключений (YAML)'
+  },
+
+  guarVpn: {
+    title: 'GUAR VPN',
+    site: 'Сайт',
+    bot: 'Бот'
   },
 
   notifications: {

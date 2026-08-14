@@ -155,6 +155,16 @@ export async function changeCurrentProfile(id: string): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('changeCurrentProfile', id))
 }
 
+export async function setCurrentProfile(id: string): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('setCurrentProfile', id))
+}
+
+export async function validateProfile(
+  id: string | undefined
+): Promise<{ ok: boolean; error?: string }> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('validateProfile', id))
+}
+
 export async function addProfileItem(item: Partial<ProfileItem>): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('addProfileItem', item))
 }
@@ -395,6 +405,10 @@ export async function showContextMenu(): Promise<void> {
 
 export async function openFile(id: string): Promise<void> {
   return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openFile', id))
+}
+
+export async function openConfigEditor(id: string): Promise<void> {
+  return ipcErrorWrapper(await window.electron.ipcRenderer.invoke('openConfigEditor', id))
 }
 
 export async function openDevTools(): Promise<void> {

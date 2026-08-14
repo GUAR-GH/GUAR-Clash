@@ -140,16 +140,19 @@ export const mihomoGroups = async (): Promise<ControllerMixedGroup[]> => {
       groups.push({ ...newGroup, all: newAll })
     }
   })
-  if (!groups.find((group) => group.name === 'GLOBAL') && mode === 'global') {
-    const newGlobal = proxies.proxies['GLOBAL'] as ControllerGroupDetail
-    if (!newGlobal.hidden) {
-      const newAll = newGlobal.all.map((name) => enrichProxy(proxies.proxies[name]))
-      groups.push({ ...newGlobal, all: newAll })
-    }
-  }
   if (mode === 'global') {
-    const global = groups.findIndex((group) => group.name === 'GLOBAL')
-    groups.unshift(groups.splice(global, 1)[0])
+    // В глобальном режиме весь трафик маршрутизируется через селектор GLOBAL;
+    // остальные группы правил не применяются. Возвращаем только GLOBAL, чтобы
+    // набор групп всегда соответствовал режиму — единый источник правды здесь,
+    // в mihomoGroups, без повторной фильтрации по режиму на клиенте (иначе
+    // клиентский mode и данные SWR рассинхронизируются при переключении).
+    const existing = groups.find((group) => group.name === 'GLOBAL')
+    if (existing) return [existing]
+    const newGlobal = proxies.proxies['GLOBAL'] as ControllerGroupDetail
+    if (newGlobal && !newGlobal.hidden) {
+      const newAll = newGlobal.all.map((name) => enrichProxy(proxies.proxies[name]))
+      return [{ ...newGlobal, all: newAll }]
+    }
   }
   return groups
 }

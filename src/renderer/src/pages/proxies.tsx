@@ -42,13 +42,7 @@ const Proxies: React.FC = () => {
   const fromHome = (location.state as { fromHome?: boolean })?.fromHome ?? false
   const { controledMihomoConfig } = useControledMihomoConfig()
   const { mode = 'rule' } = controledMihomoConfig || {}
-  const { groups: rawGroups = [], mutate } = useGroups()
-  // В глобальном режиме показываем только группу GLOBAL (выбор сервера),
-  // остальные селекторы правил не применяются и скрыты.
-  const groups = useMemo(
-    () => (mode === 'global' ? rawGroups.filter((g) => g.name === 'GLOBAL') : rawGroups),
-    [rawGroups, mode]
-  )
+  const { groups = [], mutate } = useGroups()
   const { appConfig } = useAppConfig()
   const { profileConfig } = useProfileConfig()
   const currentProfile = profileConfig?.current

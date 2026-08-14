@@ -523,7 +523,12 @@ export default {
         'When enabled, switching profiles or saving them reloads the config via API without restarting the core. When disabled, the core restarts.',
       disconnectDetectInterval: 'Disconnect detect interval',
       bypassDetectInterfaces: 'Bypass detect interfaces',
-      directOnSpecificWifi: 'Direct mode on specific WiFi SSID'
+      directOnSpecificWifi: 'Direct mode on specific WiFi SSID',
+      turnOffTunFirst: 'Turn off the tunnel first',
+      turnOffProxyFirst: 'Turn off the proxy first',
+      brokenConfigBlockStart: 'Config is broken — fix it before starting',
+      restartTunnelToApply: 'Profile selected. Restart the tunnel to apply?',
+      restartNow: 'Restart'
     },
     shortcuts: {
       title: 'Shortcut Settings',
@@ -920,6 +925,12 @@ export default {
     yamlParseFailed: 'YAML Parse Failed: ',
     pacEditorTitle: 'Edit PAC Script',
     bypassEditorTitle: 'Edit Bypass List (YAML)'
+  },
+
+  guarVpn: {
+    title: 'GUAR VPN',
+    site: 'Website',
+    bot: 'Bot'
   },
 
   notifications: {

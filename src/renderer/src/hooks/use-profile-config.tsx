@@ -7,7 +7,8 @@ import {
   addProfileItem as add,
   removeProfileItem as remove,
   updateProfileItem as update,
-  changeCurrentProfile as change
+  changeCurrentProfile as change,
+  setCurrentProfile as setCurrent
 } from '@renderer/utils/ipc'
 
 interface ProfileConfigContextType {
@@ -18,6 +19,7 @@ interface ProfileConfigContextType {
   updateProfileItem: (item: ProfileItem) => Promise<void>
   removeProfileItem: (id: string) => Promise<void>
   changeCurrentProfile: (id: string) => Promise<void>
+  setCurrentProfile: (id: string) => Promise<void>
   hwidLimitError: string | null
   clearHwidLimitError: () => void
 }
@@ -100,6 +102,17 @@ export const ProfileConfigProvider: React.FC<{ children: ReactNode }> = ({ child
     }
   }
 
+  const setCurrentProfile = async (id: string): Promise<void> => {
+    try {
+      await setCurrent(id)
+    } catch (e) {
+      toast.error(`${e}`)
+    } finally {
+      mutateProfileConfig()
+      window.electron.ipcRenderer.send('updateTrayMenu')
+    }
+  }
+
   useEffect(() => {
     const handleProfileConfigUpdated = (): void => {
       mutateProfileConfig()
@@ -127,6 +140,7 @@ export const ProfileConfigProvider: React.FC<{ children: ReactNode }> = ({ child
         removeProfileItem,
         updateProfileItem,
         changeCurrentProfile,
+        setCurrentProfile,
         hwidLimitError,
         clearHwidLimitError
       }}

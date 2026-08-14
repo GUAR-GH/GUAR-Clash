@@ -3,6 +3,7 @@ import BasePage from '@renderer/components/base/base-page'
 import GeneralConfig from '@renderer/components/settings/general-config'
 import AdvancedSettings from '@renderer/components/settings/advanced-settings'
 import Actions from '@renderer/components/settings/actions'
+import GuarVpnSection from '@renderer/components/settings/guar-vpn-section'
 import ShortcutConfig from '@renderer/components/settings/shortcut-config'
 import AppearanceConfig from '@renderer/components/settings/appearance-confis'
 import LanguageConfig from '@renderer/components/settings/language-config'
@@ -44,6 +45,7 @@ const Settings: React.FC = () => {
         showHiddenSettings={showHiddenSettings}
         onUnlockHiddenSettings={() => setShowHiddenSettings(true)}
       />
+      <GuarVpnSection />
     </BasePage>
   )
 }
