@@ -11,6 +11,8 @@ out
 *.ttf
 .serena
 .zed
+.codex
+.agents
 *.tsbuildinfo
 latest.yml
 

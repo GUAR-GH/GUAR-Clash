@@ -15,6 +15,11 @@ files:
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!{CLAUDE.md,changelog.md,rawChangelog.md,.mailmap,.editorconfig}'
+  - '!docs'
+  - '!patches'
+  - '!.github'
+  - '!.vscode'
 extraResources:
   - from: './extra/'
     to: ''
