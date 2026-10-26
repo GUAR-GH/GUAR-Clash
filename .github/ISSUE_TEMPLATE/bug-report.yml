@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible application problem without private data.
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach credentials, controller secrets, subscription URLs, private configurations or unredacted logs. Report vulnerabilities through the private security channel.
+  - type: input
+    id: version
+    attributes:
+      label: Application version and installer format
+      description: Include whether this is a historical GPL version or an independent preview.
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and architecture
+    validations:
+      required: true
+  - type: input
+    id: engine
+    attributes:
+      label: Separately installed engine and version
+      description: Do not include its controller secret or subscription URL.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps, expected result and actual result
+      description: Include a minimal redacted reproduction.
+    validations:
+      required: true
